@@ -31,8 +31,8 @@ No Claude Code:
 Depois, dentro do projeto: "monta o quality-kit neste projeto" (skill `setup`).
 Ela roda `quality-kit install` uma vez por máquina: as dependências (eslint,
 typescript-eslint, knip, jscpd, playwright) ficam em `~/.quality-kit/runtime`,
-nunca no projeto. Para chamar `quality-kit` direto, ponha `~/.quality-kit/bin`
-no PATH.
+nunca no projeto. Dentro do Claude Code o plugin já põe `quality-kit` no PATH;
+no seu terminal, ponha `~/.quality-kit/bin` no PATH.
 
 No Codex: `codex plugin marketplace add half144/quality-kit` e instale `quality-kit@quality-kit` (o catálogo está em
 `.agents/plugins/marketplace.json` e as skills em `skills/`, no formato que o

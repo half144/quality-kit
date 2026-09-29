@@ -9,15 +9,14 @@ O kit monta a escada de confiança: (1) a estrutura impede o erro, (2) análise
 estática, (3) prova em runtime. O núcleo é igual para todo projeto; o que é do
 projeto você gera aqui.
 
-`quality-kit` abaixo é o comando do kit. Se não estiver no PATH, use
-`node ~/.quality-kit/kit/bin/quality-kit.mjs` (depois do passo 1) ou
-`node "$CLAUDE_PLUGIN_ROOT/bin/quality-kit.mjs"`.
+`quality-kit` abaixo é o comando do kit. No Claude Code o plugin já o põe no
+PATH do Bash. No Codex, ou fora do plugin, use `bin/quality-kit` do clone do
+kit; depois do passo 1, `~/.quality-kit/bin/quality-kit` também serve.
 
 ## Passos
 
 1. **Instalar as dependências do kit nesta máquina** (uma vez; não toca no
-   projeto): `node "$CLAUDE_PLUGIN_ROOT/bin/quality-kit.mjs" install`. No Codex,
-   rode o `bin/quality-kit.mjs install` do clone do plugin.
+   projeto): `quality-kit install`.
 2. **Ler o projeto:** `quality-kit detect`. Anote a stack de cada pacote, o
    gerenciador de pacotes, os testes, os tsconfig, a forma do código
    (`shape`: pastas do topo, convenção de nomes, barris, `__tests__`), se já há
