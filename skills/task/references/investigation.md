@@ -1,10 +1,4 @@
----
-name: investigation
-description: "quality-kit investigation playbook: explain how the code works with file:line and runtime facts, changing nothing. Loaded by the task skill for a question about the code; start with task."
-user-invocable: false
----
-
-# investigation
+# The investigation playbook
 
 For more than a one-look answer, copy these steps into the task list. There
 is no tiny plan: nothing changes.

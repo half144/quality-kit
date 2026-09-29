@@ -1,12 +1,6 @@
----
-name: bug-fix
-description: "quality-kit bug-fix playbook: reproduce, failing test, root-cause fix, proof on the same surface. Loaded by the task skill for something broken; start with task."
-user-invocable: false
----
+# The bug-fix playbook
 
-# bug-fix
-
-Copy these steps into the task list after the plan's ok (see the `task` skill).
+Copy these steps into the task list after the plan's ok (step 3 of the `task` skill).
 
 1. **Reproduce it yourself**, on the surface where the bug shows up: the screen
    (`quality-kit verify <path>` with the demo path from the map, or the
@@ -28,7 +22,7 @@ Copy these steps into the task list after the plan's ok (see the `task` skill).
 5. **Watch the test pass**, along with the whole workspace suite.
 6. **Prove it on the same surface.** Repeat the reproduction from step 1 and
    show the error is gone.
-7. **Verify:** [the task skill's verification](../task/references/verification.md).
+7. **Verify:** [the task skill's verification](verification.md).
 8. **Commit** with the cause in the message, not just the symptom.
 
 ## Response

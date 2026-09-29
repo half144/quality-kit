@@ -12,13 +12,13 @@ the method is where the agent goes wrong.
 
 ## 1. Pick the playbook
 
-| The request | Playbook skill |
+| The request | Playbook |
 | --- | --- |
-| Something that used to work, or should work, and doesn't | `bug-fix` |
-| New behavior or a requested change in behavior | `feature` |
-| Change the shape of the code without changing what it does | `refactor` |
-| Slow, heavy, janky, Lighthouse score | `perf` |
-| Understand, explain, locate, weigh options, without changing code | `investigation` |
+| Something that used to work, or should work, and doesn't | [bug-fix](references/bug-fix.md) |
+| New behavior or a requested change in behavior | [feature](references/feature.md) |
+| Change the shape of the code without changing what it does | [refactor](references/refactor.md) |
+| Slow, heavy, janky, Lighthouse score | [perf](references/perf.md) |
+| Understand, explain, locate, weigh options, without changing code | [investigation](references/investigation.md) |
 
 - A bug that only shows up with volume or on a slow device is `perf`.
 - A feature that needs bad code reshaped first: `refactor` in its own commit,
@@ -26,9 +26,9 @@ the method is where the agent goes wrong.
 - An ambiguous request: `investigation` first; if the answer calls for a
   change, say which playbook comes next and continue from step 2.
 
-Load the playbook skill and read it in full, along with the project's
-supplement, `PLAYBOOKS.md` in the ruleset folder (`quality-kit paths`; in team
-mode `.quality/PLAYBOOKS.md`).
+Read the chosen playbook's file in `references/` in full (only that one),
+along with the project's supplement, `PLAYBOOKS.md` in the ruleset folder
+(`quality-kit paths`; in team mode `.quality/PLAYBOOKS.md`).
 
 ## 2. Size the ceremony
 

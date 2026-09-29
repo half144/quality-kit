@@ -12,9 +12,9 @@ only counts as done after it climbs the trust ladder.
 3. **Runtime proof.** If you changed a screen, run `quality-kit verify
    --changed`; the screens and how to open them are in `{map}`.
 
-Every task starts with the `task` skill (the router), which picks the playbook
-(`bug-fix`, `feature`, `refactor`, `perf`, `investigation`). The project's
-real commands are in `.quality/PLAYBOOKS.md`.
+Every task starts with the `task` skill (the router), which picks one of its
+playbooks (`bug-fix`, `feature`, `refactor`, `perf`, `investigation`). The
+project's real commands are in `.quality/PLAYBOOKS.md`.
 
 Before saying you are done, run `quality-kit gate` (if it is not on the PATH:
 `node ~/.quality-kit/kit/bin/quality-kit.mjs gate`) and fix whatever it

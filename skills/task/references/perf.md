@@ -1,12 +1,6 @@
----
-name: perf
-description: "quality-kit perf playbook: measure before and after on a production build; no number, no change. Loaded by the task skill for something slow or heavy; start with task."
-user-invocable: false
----
+# The perf playbook
 
-# perf
-
-Copy these steps into the task list after the plan's ok (see the `task` skill).
+Copy these steps into the task list after the plan's ok (step 3 of the `task` skill).
 First read the project's performance rules, if any (AGENTS.md, the ruleset's
 PLAYBOOKS.md).
 
@@ -29,7 +23,7 @@ PLAYBOOKS.md).
    Median. If it didn't improve beyond the noise, revert.
 6. **Record the rule** the measurement taught, with the number, wherever the
    project keeps its performance rules.
-7. **Verify:** [the task skill's verification](../task/references/verification.md); the screen is still correct
+7. **Verify:** [the task skill's verification](verification.md); the screen is still correct
    (`quality-kit verify --changed`).
 
 ## Response

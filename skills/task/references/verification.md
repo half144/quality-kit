@@ -31,7 +31,7 @@ until a human accepts it.
 | --- | --- |
 | Screen (component, style, route) | `quality-kit verify --changed` before wrapping up. The screens and demo path are in the ruleset's `FEATURE_MAP.md`; a new screen goes into the map (skill `map`). Look at the screenshots, not just the report. |
 | Backend, function, script | The test next to it, running, and the real command once (the function called, the script executed). |
-| Performance | The `perf` playbook's measurement, before and after, in the same environment. |
+| Performance | The [perf playbook](perf.md)'s measurement, before and after, in the same environment. |
 | Documentation only | Read the text and check that every command it mentions exists. |
 
 If the proof fails, suspect the observation method first (the right URL? the new

@@ -1,14 +1,8 @@
----
-name: refactor
-description: "quality-kit refactor playbook: characterization tests first, same behavior proven after. Loaded by the task skill for a change of shape without a change of behavior; start with task."
-user-invocable: false
----
+# The refactor playbook
 
-# refactor
-
-Copy these steps into the task list after the plan's ok (see the `task` skill).
+Copy these steps into the task list after the plan's ok (step 3 of the `task` skill).
 Refactoring is changing the shape without changing the behavior. A bug along the
-way: note it and fix it later, through `bug-fix`.
+way: note it and fix it later, through the [bug-fix playbook](bug-fix.md).
 
 1. **Lock in the current behavior** with characterization tests: pure function
    output for real and edge-case inputs, component render with what the person
@@ -23,7 +17,7 @@ way: note it and fix it later, through `bug-fix`.
    code carries its own frozen debt; a new file is born clean.
 5. **Prove identical behavior:** the same tests, without changing a single
    expectation. Affected screens go through `quality-kit verify --changed`.
-6. **Verify:** [the task skill's verification](../task/references/verification.md). Measure the largest files you
+6. **Verify:** [the task skill's verification](verification.md). Measure the largest files you
    touched: no new giant file. The baseline shrinks on its own when you fix old
    debt; it never grows.
 7. **Revert if it didn't get better.**

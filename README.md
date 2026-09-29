@@ -96,7 +96,7 @@ ruleset. Nothing else to do.
 ## The daily workflow
 
 **You only call one skill.** `task` is the entry point; it chains the rest in
-order (playbook → `tiny-plan` → code → `evidence` → `ship`).
+order (its playbook → `tiny-plan` → code → `evidence` → `ship`).
 
 ```
 /quality-kit:task the host can't see how many guests confirmed
@@ -107,18 +107,19 @@ you: say "ok" to the plan, look at the evidence, merge the PR.
 
 | Skill | Who calls it |
 | --- | --- |
-| `task` | **you**, for every piece of work |
+| `task` (with its playbooks) | **you**, for every piece of work |
 | `setup` | **you**, once per project (only you can start it) |
 | `map`, `gardener` | **you**, now and then (new routes, a recurring anti-pattern) |
-| playbooks, `tiny-plan` | the agent, through `task` (not in the `/` menu) |
+| `tiny-plan` | the agent, through `task` (not in the `/` menu) |
 | `verify`, `evidence`, `ship` | the agent, through `task`; you can call them too |
 
-A question about the code ("how does X work") goes through `investigation`
+A question about the code ("how does X work") goes through the `investigation` playbook
 with no plan and no PR. A one-line change still gets a (short) plan.
 
 ### 1. You ask for something
 
-The `task` skill routes the request to a playbook and copies its steps into the
+The `task` skill routes the request to one of its playbooks, reads only that
+one (they live in `skills/task/references/`) and copies its steps into the
 agent's task list:
 
 | Playbook | What it forces |
@@ -218,9 +219,8 @@ CI runs the full gate on the whole change, pinned to the same kit version.
 | Skill | When |
 | --- | --- |
 | `setup` | once per project: reads it, asks 3 to 5 questions, writes the ruleset |
-| `task` | every request: picks the playbook and lays out the whole flow |
+| `task` | every request: picks the playbook (`bug-fix`, `feature`, `refactor`, `perf`, `investigation`, read on demand) and lays out the whole flow |
 | `tiny-plan` | before any code: the five-line plan and the stop for your ok |
-| `bug-fix`, `feature`, `refactor`, `perf`, `investigation` | the playbooks |
 | `verify` | runtime proof of changed screens, read by the gate |
 | `evidence` | screenshots and videos for the PR |
 | `ship` | the PR with plan, evidence and gate summary |

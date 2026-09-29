@@ -12,9 +12,9 @@ só vale depois de passar pela escada de confiança.
 3. **Prova em runtime.** Mudou tela, rode `quality-kit verify --changed`; as
    telas e como abri-las estão em `{map}`.
 
-Toda tarefa começa pela skill `task` (o roteador), que escolhe o playbook
-(`bug-fix`, `feature`, `refactor`, `perf`, `investigation`). Os comandos reais
-do projeto estão em `.quality/PLAYBOOKS.md`.
+Toda tarefa começa pela skill `task` (o roteador), que escolhe um dos seus
+playbooks (`bug-fix`, `feature`, `refactor`, `perf`, `investigation`). Os
+comandos reais do projeto estão em `.quality/PLAYBOOKS.md`.
 
 Antes de dizer que terminou, rode `quality-kit gate` (se não estiver no PATH:
 `node ~/.quality-kit/kit/bin/quality-kit.mjs gate`) e corrija o que ele
