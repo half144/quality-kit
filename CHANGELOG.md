@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.3.4
+
+- **The owner sees when the agent waits for the plan's ok.** When the turn
+  ends on a saved plan waiting for approval, the Stop hook shows
+  `quality-kit: waiting for your ok on the plan (quality-kit plan show)`
+  (exit 0 with `systemMessage`, so it informs without blocking). Before, the
+  turn ended silently and the pause could pass for finished work. A plan
+  saved on a branch with no code yet counts as waiting too.
+- **The playbooks are part of `task`.** `bug-fix`, `feature`, `refactor`,
+  `perf` and `investigation` moved from separate skills to
+  `skills/task/references/`, and `task` reads only the one it picks. Their
+  steps are unchanged. The ruleset hash of existing projects does not change.
+
 ## v0.3.3
 
 - **Stopping to ask for the plan's ok works mid-branch.** `plan write`
