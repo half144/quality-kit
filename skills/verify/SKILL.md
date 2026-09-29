@@ -28,3 +28,7 @@ opens it.
 A new screen, or a demo path that changed: use the `map` skill first.
 How to start the app (command, build, env) lives in `verify.apps` in the
 ruleset config; changing that is changing the ruleset (a human accepts).
+
+verify is the proof for the gate. The screenshots and video for the PR come
+from the `evidence` skill (`quality-kit evidence still`), framed and recorded
+on the same files.

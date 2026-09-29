@@ -130,7 +130,7 @@ test('report: a tree that changed midway fails', () => {
   const results = [{ ok: true }];
   assert.equal(buildReport({ tree: 'a', treeAfter: 'a', date: 'd', requested: [], results }).ok, true);
   assert.equal(buildReport({ tree: 'a', treeAfter: 'b', date: 'd', requested: [], results }).ok, false);
-  assert.equal(screenshotName({ app: 'web', path: '/', device: 'mobile' }), 'web-raiz-mobile.png');
+  assert.equal(screenshotName({ app: 'web', path: '/', device: 'mobile' }), 'web-root-mobile.png');
 });
 
 test('map --write appends the row at the end of the app table, in the map language', () => {

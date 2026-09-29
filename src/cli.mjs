@@ -2,13 +2,15 @@
  * The quality-kit command line. A single command for the gate (`gate`), which
  * the Claude hook (`hook`), the git hooks (`git-hook`) and CI (`gate --ci`)
  * call; the rest builds the ruleset (`install`, `detect`, `init`, `finalize`),
- * proves the screen (`verify`), keeps the branch's tiny plan (`plan`) and manages the lock (`rules accept`, humans only).
+ * proves the screen (`verify`), carries the delivery (`plan`, `evidence`,
+ * `ship`) and manages the lock (`rules accept`, humans only).
  */
 
 import { readFileSync } from 'node:fs';
 
 import { branchDir } from './branch/state.mjs';
 import { loadConfig } from './config.mjs';
+import { evidenceCommand } from './evidence/command.mjs';
 import { report, runGate } from './gate/gate.mjs';
 import { guardMain } from './gate/guard.mjs';
 import { hookMain } from './gate/hook.mjs';
@@ -19,6 +21,7 @@ import { installKit } from './setup/install.mjs';
 import { detect } from './setup/detect.mjs';
 import { finalizeProject, initProject } from './setup/init.mjs';
 import { gitHook } from './setup/git-hook.mjs';
+import { runShip } from './ship/ship.mjs';
 import { mapCommand } from './verify/map-command.mjs';
 import { createSpaServer } from './verify/static-server.mjs';
 import { runVerify } from './verify/verify.mjs';
@@ -32,6 +35,8 @@ const HELP = `quality-kit <command>
   gate [--profile full|fast] [--base <ref>] [--ci] [--allow-regua-change]
   verify <path>... | --changed | --all
   plan write|show|approve     the branch's tiny plan (approve only after the owner's ok in chat)
+  evidence still|record ...   screenshots, framing and video for the PR (also status, clear, doctor)
+  ship [--dry-run]            opens the PR with the plan, the evidence and the gate summary
   map [--write]               checks the screen map against the code routes
   serve <folder> --port <n>   serves a static export as an SPA (for verify)
   paths                       where this project's ruleset and state live
@@ -98,6 +103,11 @@ const COMMANDS = {
     return (await runVerify(project, config, argv)) ? 0 : 1;
   },
   plan: (argv) => planCommand(locateProject(process.cwd()), argv),
+  evidence: (argv) => evidenceCommand(activeProject(), argv),
+  ship: (argv) => {
+    const { project, config } = activeProject();
+    return runShip(project, config, argv);
+  },
   map: (argv) => mapCommand(activeProject(), argv),
   paths: () => {
     const project = locateProject(process.cwd());

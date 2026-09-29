@@ -27,7 +27,7 @@ export function contextOptions(profile, app, origin) {
   return { ...profile, storageState };
 }
 
-async function settle(page) {
+export async function settle(page) {
   for (let round = 0; round < MAX_SETTLES; round += 1) {
     const before = page.url();
     await page.waitForLoadState('networkidle', { timeout: SETTLE_TIMEOUT_MS }).catch(() => undefined);

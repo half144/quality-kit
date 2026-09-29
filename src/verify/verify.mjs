@@ -33,7 +33,7 @@ export function parseArgs(apps, argv) {
 }
 
 export function screenshotName({ app, path, device }) {
-  const slug = path.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'raiz';
+  const slug = path.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'root';
   return `${app}-${slug}-${device}.png`;
 }
 
