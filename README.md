@@ -34,7 +34,7 @@ typescript-eslint, knip, jscpd, playwright) ficam em `~/.quality-kit/runtime`,
 nunca no projeto. Dentro do Claude Code o plugin já põe `quality-kit` no PATH;
 no seu terminal, ponha `~/.quality-kit/bin` no PATH.
 
-No Codex: `codex plugin marketplace add half144/quality-kit` e instale `quality-kit@quality-kit` (o catálogo está em
+No Codex: `codex plugin marketplace add half144/quality-kit` e `codex plugin add quality-kit@quality-kit` (o catálogo está em
 `.agents/plugins/marketplace.json` e as skills em `skills/`, no formato que o
 Codex lê).
 
