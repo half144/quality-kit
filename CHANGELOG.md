@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.3.3
+
+- **Stopping to ask for the plan's ok works mid-branch.** `plan write`
+  records the state of the code; while a saved plan waits for the ok and no
+  code changed since, the Stop hook lets the turn end. Before, a branch that
+  already had code (a second task, a plan updated after drift) blocked every
+  Stop, so the agent could never wait for the owner.
+- **Plugin updates no longer break the hook.** The dependency runtime is
+  keyed by the lockfile's dependency set instead of the kit version, so a
+  release that changes no dependency needs no new `quality-kit install`.
+  (This release moves the runtime once: run `quality-kit install` after it.)
+- **`ship` updates the open PR** of the branch instead of failing on
+  `gh pr create`: after review changes, recapture the evidence and ship again.
+- **`quality-kit <command> --help`** prints that command's options anywhere,
+  even outside a set-up project. The overview lists every action.
+- **Skills:** descriptions cut from ~6,000 to ~2,700 characters in context,
+  so the skill listing stops hiding them. `task` is the one trigger (with an
+  `argument-hint`); the playbooks and `tiny-plan` are loaded by it and left
+  out of the `/` menu; `setup` only runs when the owner calls it. `task`
+  spells out the chain skill by skill, keeps questions free of plan and PR,
+  and handles a project without the kit.
+
 ## v0.3.2
 
 - Evidence stills are clean by default: the skill marks the screen only when

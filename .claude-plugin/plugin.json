@@ -1,6 +1,6 @@
 {
   "name": "quality-kit",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Mechanical guards and playbooks that make coding agents ship quality work: tiny plan approved by the owner, gate on Stop, ruleset integrity lock, type-aware lint, strict TS, tests, architecture, on-screen proof, PR evidence and ship.",
   "author": {
     "name": "half144",

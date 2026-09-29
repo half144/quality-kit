@@ -1,6 +1,6 @@
 {
   "name": "quality-kit",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Mechanical guards and playbooks that make coding agents ship quality work in JS/TS projects.",
   "author": {
     "name": "half144",
@@ -29,7 +29,7 @@
     "websiteURL": "https://github.com/half144/quality-kit",
     "defaultPrompt": [
       "Set up the quality-kit in this project.",
-      "Use the quality-kit bug-fix playbook."
+      "Use the quality-kit task skill for this change."
     ]
   }
 }

@@ -6,15 +6,15 @@
   },
   "metadata": {
     "description": "The quality-kit: guards and playbooks for coding agents in JS/TS projects.",
-    "version": "0.3.2"
+    "version": "0.3.3"
   },
   "plugins": [
     {
       "name": "quality-kit",
       "source": "./",
-      "description": "Quality gate on Stop, ruleset integrity lock, setup skill, playbooks and verify.",
+      "description": "Quality gate on Stop, ruleset integrity lock, and the task flow: playbook, tiny plan, evidence and PR.",
       "category": "development",
-      "version": "0.3.2"
+      "version": "0.3.3"
     }
   ]
 }

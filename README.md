@@ -72,11 +72,15 @@ codex plugin marketplace add half144/quality-kit
 codex plugin add quality-kit@quality-kit
 ```
 
-**2. Set it up in a project.** Open the project and ask the agent:
+**2. Set it up in a project.** Open the project and run:
 
-> set up the quality-kit in this project
+```
+/quality-kit:setup
+```
 
-The `setup` skill reads the project (stack, folders, scripts, routes), asks you
+The agent never starts it on its own: setup writes hooks and the ruleset, so
+it only runs when you call it (in Codex, ask for it in plain words). The
+`setup` skill reads the project (stack, folders, scripts, routes), asks you
 3–5 questions, writes the ruleset, measures today's debt and freezes it. The
 tools it needs (eslint, typescript-eslint, knip, jscpd, playwright, cutaway)
 are installed once in `~/.quality-kit/`, never in your project.
@@ -104,12 +108,13 @@ you: say "ok" to the plan, look at the evidence, merge the PR.
 | Skill | Who calls it |
 | --- | --- |
 | `task` | **you**, for every piece of work |
-| `setup` | **you**, once per project |
+| `setup` | **you**, once per project (only you can start it) |
 | `map`, `gardener` | **you**, now and then (new routes, a recurring anti-pattern) |
-| playbooks, `tiny-plan`, `verify`, `evidence`, `ship` | the agent, through `task` |
+| playbooks, `tiny-plan` | the agent, through `task` (not in the `/` menu) |
+| `verify`, `evidence`, `ship` | the agent, through `task`; you can call them too |
 
-You can call any of them directly (e.g. `/quality-kit:evidence` for extra
-screenshots), but you don't need to.
+A question about the code ("how does X work") goes through `investigation`
+with no plan and no PR. A one-line change still gets a (short) plan.
 
 ### 1. You ask for something
 
@@ -140,7 +145,8 @@ The agent saves it (`quality-kit plan write`), shows it and stops. You answer
 "ok" (or ask for changes); only then it runs `quality-kit plan approve` and
 starts coding. The approval is bound to the plan's text: an edited plan needs
 a new ok. While the branch has code changes and no approved plan, the Stop
-hook won't let the agent finish. Turn it off per project with
+hook won't let the agent finish, except to wait for your ok on a plan it just
+saved (with no code changed since). Turn it off per project with
 `"requirePlan": false` in the config.
 
 ### 3. The agent tries to finish → the gate runs
@@ -192,7 +198,7 @@ Codex and humans.
 
 ```
 quality-kit ship --dry-run   # preview the title and body
-quality-kit ship             # push and open the PR
+quality-kit ship             # push and open the PR (or update the open one)
 ```
 
 The PR body is the tiny plan, then the evidence (uploaded as GitHub
@@ -299,6 +305,8 @@ by `setup` and kept current by two skills:
 
 ## Commands
 
+`quality-kit <command> --help` prints the options of any command.
+
 **Everyday**
 
 | Command | What it does |
@@ -307,7 +315,7 @@ by `setup` and kept current by two skills:
 | `quality-kit verify --changed` | open the affected screens and record the proof |
 | `quality-kit plan write` / `approve` | save the branch's tiny plan; approve it after your ok |
 | `quality-kit evidence still` / `record` | screenshots (framed, optionally marked) and videos for the PR |
-| `quality-kit ship` | open the PR with plan, evidence and gate summary (`--dry-run` to preview) |
+| `quality-kit ship` | open (or update) the PR with plan, evidence and gate summary (`--dry-run` to preview) |
 | `quality-kit map` | check the screen map against the real routes |
 | `quality-kit rules status` | is the ruleset the accepted one? |
 
