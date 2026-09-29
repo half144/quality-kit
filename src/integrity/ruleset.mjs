@@ -11,8 +11,8 @@ import { join, relative } from 'node:path';
 
 import { matchesAny } from '../architecture/glob.mjs';
 
-/** Living documents and the debt itself: they are not part of the ruleset hash. */
-const NOT_REGUA = [/^ARCHITECTURE\.md$/, /^FEATURE_MAP\.md$/, /^PLAYBOOKS\.md$/, /^baseline\//, /^integrity\.json$/, /^README\.md$/, /^\.cache\//];
+/** Living documents, the debt itself and the per-branch delivery state: they are not part of the ruleset hash. */
+const NOT_REGUA = [/^ARCHITECTURE\.md$/, /^FEATURE_MAP\.md$/, /^PLAYBOOKS\.md$/, /^baseline\//, /^integrity\.json$/, /^README\.md$/, /^\.cache\//, /^branches\//];
 
 function walk(dir, base = dir) {
   if (!existsSync(dir)) return [];

@@ -2,16 +2,18 @@
  * The quality-kit command line. A single command for the gate (`gate`), which
  * the Claude hook (`hook`), the git hooks (`git-hook`) and CI (`gate --ci`)
  * call; the rest builds the ruleset (`install`, `detect`, `init`, `finalize`),
- * proves the screen (`verify`) and manages the lock (`rules accept`, humans only).
+ * proves the screen (`verify`), keeps the branch's tiny plan (`plan`) and manages the lock (`rules accept`, humans only).
  */
 
 import { readFileSync } from 'node:fs';
 
+import { branchDir } from './branch/state.mjs';
 import { loadConfig } from './config.mjs';
 import { report, runGate } from './gate/gate.mjs';
 import { guardMain } from './gate/guard.mjs';
 import { hookMain } from './gate/hook.mjs';
 import { acceptRules, rebaseline, rulesStatus } from './integrity/accept.mjs';
+import { planCommand } from './plan/plan-command.mjs';
 import { locateProject } from './project.mjs';
 import { installKit } from './setup/install.mjs';
 import { detect } from './setup/detect.mjs';
@@ -29,6 +31,7 @@ const HELP = `quality-kit <command>
   finalize                    freezes the debt, installs the hooks and enables the ruleset
   gate [--profile full|fast] [--base <ref>] [--ci] [--allow-regua-change]
   verify <path>... | --changed | --all
+  plan write|show|approve     the branch's tiny plan (approve only after the owner's ok in chat)
   map [--write]               checks the screen map against the code routes
   serve <folder> --port <n>   serves a static export as an SPA (for verify)
   paths                       where this project's ruleset and state live
@@ -94,8 +97,12 @@ const COMMANDS = {
     const { project, config } = activeProject();
     return (await runVerify(project, config, argv)) ? 0 : 1;
   },
+  plan: (argv) => planCommand(locateProject(process.cwd()), argv),
   map: (argv) => mapCommand(activeProject(), argv),
-  paths: () => print(locateProject(process.cwd())),
+  paths: () => {
+    const project = locateProject(process.cwd());
+    return print({ ...project, branchDir: branchDir(project) });
+  },
   serve: (argv) => serveSpa(argv[0], Number(option(argv, '--port'))),
   rules: (argv) => {
     if (argv[0] === 'accept') return acceptRules();

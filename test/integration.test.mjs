@@ -14,6 +14,9 @@ process.env.QUALITY_KIT_HOME = home;
 const { loadConfig } = await import('../src/config.mjs');
 const { runGate } = await import('../src/gate/gate.mjs');
 const { handleHook } = await import('../src/gate/hook.mjs');
+const { branchDir } = await import('../src/branch/state.mjs');
+const { branchPlanProblem } = await import('../src/plan/plan-check.mjs');
+const { approvePlan, writePlan } = await import('../src/plan/store.mjs');
 const { locateProject } = await import('../src/project.mjs');
 const { finalizeProject, initProject } = await import('../src/setup/init.mjs');
 
@@ -72,6 +75,36 @@ test('the gate fails a new file without a test, any, a loose type and a forbidde
   assert.match(problems, /no-explicit-any/);
   assert.match(problems, /TS7006/);
   rmSync(join(repo, 'src/features/pagamento'), { recursive: true });
+});
+
+const PLAN = 'Goal: a helper for new numbers\nContext: none exists\nWhere: src/lib/nova.ts\nHow it works: returns one\nProof: its unit test';
+
+test('the Stop hook asks for the owner-approved tiny plan once the branch changes code; git and CI do not', async () => {
+  write('src/lib/um.ts', 'export function um(): number {\n  return 1;\n}\n');
+  write('src/lib/um.test.ts', "import { um } from './um';\nif (um() !== 1) throw new Error('um');\n");
+  const dir = branchDir(locateProject(repo));
+  assert.match(await handleHook({ hook_event_name: 'Stop', cwd: repo }), /write a tiny plan with the tiny-plan skill and get the owner's ok/);
+  assert.deepEqual(await gate(), []);
+  writePlan(dir, PLAN);
+  assert.match(await handleHook({ hook_event_name: 'Stop', cwd: repo }), /not approved/);
+  approvePlan(dir);
+  assert.equal(await handleHook({ hook_event_name: 'Stop', cwd: repo }), null);
+  writePlan(dir, PLAN.replace('one', 'two'));
+  assert.match(await handleHook({ hook_event_name: 'Stop', cwd: repo }), /changed after the owner approved/);
+  writePlan(dir, PLAN);
+  assert.equal(await handleHook({ hook_event_name: 'Stop', cwd: repo }), null);
+  rmSync(join(repo, 'src/lib/um.ts'));
+  rmSync(join(repo, 'src/lib/um.test.ts'));
+});
+
+test('requirePlan: false turns the plan rule off', async () => {
+  write('src/lib/dois.ts', 'export const dois = 2;\n');
+  const project = locateProject(repo);
+  rmSync(join(branchDir(project), 'approval.json'));
+  assert.match(branchPlanProblem(project, loadConfig(project.rulesDir)), /not approved/);
+  assert.equal(branchPlanProblem(project, { ...loadConfig(project.rulesDir), requirePlan: false }), null);
+  approvePlan(branchDir(project));
+  rmSync(join(repo, 'src/lib/dois.ts'));
 });
 
 test('the Stop hook hands the report back to the agent', async () => {

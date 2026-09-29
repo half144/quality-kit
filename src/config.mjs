@@ -12,6 +12,7 @@ const DEFAULTS = {
   version: 1,
   status: 'active',
   base: 'origin/main',
+  requirePlan: true,
   workspaces: [{ dir: '', tsconfig: 'tsconfig.json', test: 'none', lint: 'kit' }],
   typescript: { flags: DEFAULT_TS_FLAGS },
   architecture: { roots: [], folderSize: null },

@@ -118,6 +118,7 @@ export function buildConfig(detection, answers) {
     status: 'pending',
     mode: answers.mode,
     base: answers.base ?? detection.base,
+    requirePlan: answers.requirePlan ?? true,
     workspaces: packages
       .filter((pkg) => pkg.dir === '' || pkg.src || pkg.tsconfigs.length > 0)
       .map((pkg) => ({ dir: pkg.dir, tsconfig: pkg.tsconfigs, test: pkg.stack.test, lint: answers.lint ?? 'kit' })),
