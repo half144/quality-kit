@@ -5,6 +5,7 @@
  * the runtime that `quality-kit install` builds in ~/.quality-kit.
  */
 
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { homedir } from 'node:os';
@@ -21,8 +22,22 @@ export function kitVersion() {
   return JSON.parse(readFileSync(join(KIT_ROOT, 'package.json'), 'utf8')).version;
 }
 
-export function runtimeDir(version = kitVersion()) {
-  return join(kitHome(), 'runtime', version);
+/**
+ * The dependency set, from the lockfile without the kit's own entry (which
+ * carries the version). A release that changes no dependency keeps the key.
+ */
+export function depsKey(lock = JSON.parse(readFileSync(join(KIT_ROOT, 'package-lock.json'), 'utf8'))) {
+  const dependencies = Object.entries(lock.packages).filter(([path]) => path !== '');
+  return createHash('sha256').update(JSON.stringify(dependencies)).digest('hex').slice(0, 12);
+}
+
+/**
+ * Keyed by the dependency set, not the version: after a plugin update that
+ * changes no dependency, the hook still finds its runtime without a new
+ * `quality-kit install`.
+ */
+export function runtimeDir(key = depsKey()) {
+  return join(kitHome(), 'runtime', key);
 }
 
 /** One package per generation of the dependency list: a node_modules from an older kit version lacks the newest. */

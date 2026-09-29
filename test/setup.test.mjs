@@ -100,3 +100,11 @@ test('a hook turned off in the ruleset is not installed', () => {
 test('the AGENTS.md snippet points to the project docs', () => {
   assert.match(agentsSnippet({ docs: { architecture: 'docs/ARCHITECTURE.md', map: null } }), /`docs\/ARCHITECTURE\.md`[\s\S]*`\.quality\/FEATURE_MAP\.md`/);
 });
+
+test('runtime key: the dependency set, not the kit version', async () => {
+  const { depsKey } = await import('../src/runtime.mjs');
+  const lock = (version, eslint) => ({ packages: { '': { name: 'quality-kit', version }, 'node_modules/eslint': { version: eslint } } });
+  assert.equal(depsKey(lock('0.3.2', '9.39.4')), depsKey(lock('0.3.3', '9.39.4')));
+  assert.notEqual(depsKey(lock('0.3.3', '9.39.4')), depsKey(lock('0.3.3', '9.40.0')));
+  assert.match(depsKey(), /^[0-9a-f]{12}$/);
+});
