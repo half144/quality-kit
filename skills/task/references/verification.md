@@ -39,12 +39,9 @@ build? the seeded data?), then the code.
 
 ## For the PR: evidence and ship
 
-`verify` is the smoke proof the gate reads. The reviewer gets the evidence:
-`quality-kit evidence still <path>` (desktop and phone, framed, clean by
-default; `--mark` only when the eye would miss the change, like a bug repro) and, for an interaction, `quality-kit evidence record
-<plan.json>` (skill `evidence`). Then `quality-kit ship` (skill `ship`) opens
-the PR with the tiny plan, the evidence and the gate summary, and refuses if
-any of them is missing or stale.
+`verify` is the smoke proof the gate reads. What the reviewer sees comes from
+the `evidence` skill (framed stills, a video for an interaction), and the
+`ship` skill opens the PR with the plan, the evidence and the gate summary.
 
 ## The response
 

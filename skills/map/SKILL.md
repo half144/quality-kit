@@ -1,6 +1,6 @@
 ---
 name: map
-description: Keeps the quality-kit screen map (the ruleset's FEATURE_MAP.md) and the architecture checker in sync with the code. Use when you create, move or delete a screen or route, when the gate reports "Screen with no row in the screen map", when verify doesn't know how to open a screen, or when asked to "update the screen map", "map the routes" ("atualiza o mapa de telas"). Adds the missing routes, fills in the demo path and the features of each screen, and points out what changed in the structure and needs to become a rule.
+description: "Keeps the quality-kit screen map (FEATURE_MAP.md) in sync with the routes. Use when a screen or route is added, moved or removed, or when the gate reports a screen with no row in the map."
 ---
 
 # map: the screen map and the checker

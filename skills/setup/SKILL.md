@@ -1,6 +1,7 @@
 ---
 name: setup
-description: Sets up the quality-kit in an existing JS/TS project (Next, Expo, Vite/React, Node, Convex; monorepo or not). Use when asked to "set up the quality-kit", "install the quality gate", "configure the gate", "add quality guards for agents to this repo", "monta o quality-kit", or the first time the kit is used in a project. Reads the project, asks 3 to 5 questions, generates the ruleset (architecture checker, ARCHITECTURE.md, screen map, verify config, playbooks supplement, extra lint rules) in the project's language, freezes the existing debt and reports back.
+description: "Sets up the quality-kit in a JS/TS project (Next, Expo, Vite/React, Node, Convex; monorepo or not): reads it, asks 3 to 5 questions, writes the ruleset and freezes today's debt. Run once per project."
+disable-model-invocation: true
 ---
 
 # setup: install the quality-kit in a project

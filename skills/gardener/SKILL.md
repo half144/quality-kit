@@ -1,6 +1,6 @@
 ---
 name: gardener
-description: quality-kit ruleset gardener. Use when an anti-pattern shows up for the second time (the same mistake fixed again, a second way of doing the same thing, a review repeating the same comment), or when asked to "make it a rule", "enforce this in lint", "don't let this come back", "one way only" ("vira regra", "trava isso no lint"). Turns the anti-pattern into a mechanical rule (lint, checker or test) with a message that teaches the right way, fixes the existing code and hands the ruleset change to a human to accept.
+description: "Turns a recurring anti-pattern into a mechanical rule (lint, checker or test), fixes the existing code and hands the ruleset change to a human. Use when the same mistake shows up a second time, or when asked to \"make it a rule\" (\"vira regra\")."
 ---
 
 # gardener: the anti-pattern becomes a rule

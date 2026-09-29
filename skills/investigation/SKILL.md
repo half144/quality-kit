@@ -1,11 +1,13 @@
 ---
 name: investigation
-description: quality-kit investigation playbook, picked by the task router. Use to explain how part of the system works, why something behaves the way it does, where something lives, what a change would impact or what the options are for a problem, without changing code ("how does X work", "why", "where is", "explain"). Read-only, plus running things to observe; the output is an explanation with file and line.
+description: "quality-kit investigation playbook: explain how the code works with file:line and runtime facts, changing nothing. Loaded by the task skill for a question about the code; start with task."
+user-invocable: false
 ---
 
 # investigation
 
-Copy these steps into the task list before you start (see `task`).
+For more than a one-look answer, copy these steps into the task list. There
+is no tiny plan: nothing changes.
 No file in the repo changes in this playbook. Running things to observe is fine;
 editing is not. If the conclusion calls for a change, finish the explanation and
 say which playbook comes next.

@@ -1,11 +1,12 @@
 ---
 name: perf
-description: quality-kit performance playbook, picked by the task router. Use when something is slow, heavy or janky - page load, screen transitions, LCP, INP, CLS, Lighthouse score, a query that reads too much, a large list, a heavy bundle ("it's slow", "optimize this"). Measure before and after; without a measurement, the change does not go in.
+description: "quality-kit perf playbook: measure before and after on a production build; no number, no change. Loaded by the task skill for something slow or heavy; start with task."
+user-invocable: false
 ---
 
 # perf
 
-Copy these steps into the task list before you start (see `task`).
+Copy these steps into the task list after the plan's ok (see the `task` skill).
 First read the project's performance rules, if any (AGENTS.md, the ruleset's
 PLAYBOOKS.md).
 
@@ -28,7 +29,7 @@ PLAYBOOKS.md).
    Median. If it didn't improve beyond the noise, revert.
 6. **Record the rule** the measurement taught, with the number, wherever the
    project keeps its performance rules.
-7. **Verify:** `task/references/verification.md`; the screen is still correct
+7. **Verify:** [the task skill's verification](../task/references/verification.md); the screen is still correct
    (`quality-kit verify --changed`).
 
 ## Response

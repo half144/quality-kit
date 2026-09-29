@@ -1,6 +1,7 @@
 ---
 name: tiny-plan
-description: quality-kit tiny plan, the first step of every task that changes code, picked by the task router. Use before writing code for a bug fix, feature, refactor or perf change, when the Stop hook says "write a tiny plan with the tiny-plan skill", or when asked to "plan this", "what's the plan", "make a plan first" ("faz um plano", "qual o plano"). Writes a five-line plan the owner reads in seconds, saves it for the branch, shows it and waits for an explicit ok before any code.
+description: "Writes the five-line tiny plan for a code change, saves it with `quality-kit plan write` and stops for the owner's ok. The first step of every quality-kit task that changes code, and what the Stop hook asks for when the plan is missing."
+user-invocable: false
 ---
 
 # tiny-plan: the owner says ok before the code
@@ -39,12 +40,15 @@ PLAN
 ```
 
 (or `--file <path>`). It checks the template and stores the plan for the
-current branch, outside the repo.
+current branch, outside the repo, along with the state of the code at that
+moment.
 
 ## 3. Show it and STOP
 
 Paste the plan in the chat, as saved, and end the turn asking for the ok.
 Do not write code, do not start the playbook steps, do not approve it yourself.
+The Stop hook lets the turn end while a saved plan waits for the ok, as long
+as no code changed after it was saved.
 
 ## 4. Only after an explicit ok
 
@@ -53,6 +57,7 @@ run `quality-kit plan approve` and continue with the playbook. If they ask for
 changes, rewrite, save and show it again: approval is bound to the plan's text,
 so an edited plan needs a new ok. Anything that is not an ok is not an ok.
 
-If the work drifts from the plan (another screen, another approach), update the
-plan and ask again before finishing: the Stop hook blocks a branch with code
-changes and no approved plan.
+If the work drifts from the plan (another screen, another approach), stop
+editing, save the updated plan (`quality-kit plan write`), show it and end the
+turn for a new ok. The Stop hook blocks a branch whose code changed without an
+approved plan.

@@ -1,11 +1,12 @@
 ---
 name: feature
-description: quality-kit playbook for a new feature or a behavior change, picked by the task router. Use to add a screen, field, endpoint, backend function, flow, integration or copy with logic ("add", "implement", "build", "change how X works"). Understand the data path, decide where each piece lives according to the architecture ruleset, build in tested slices and prove it running.
+description: "quality-kit feature playbook: data path, where each piece lives, tested slices, proof running. Loaded by the task skill for new or changed behavior; start with task."
+user-invocable: false
 ---
 
 # feature
 
-Copy these steps into the task list before you start (see `task`).
+Copy these steps into the task list after the plan's ok (see the `task` skill).
 
 1. **Understand what exists.** The data path end to end (route, screen, state,
    backend call, business rule, storage). Look for the pattern the neighboring
@@ -26,7 +27,7 @@ Copy these steps into the task list before you start (see `task`).
    first; nothing heavy on the path of people who don't use it.
 6. **Prove it running**, along the path a person actually uses: `quality-kit
    verify --changed`. A new screen goes into the map (skill `map`) in the same PR.
-7. **Verify:** `task/references/verification.md`.
+7. **Verify:** [the task skill's verification](../task/references/verification.md).
 8. **Small commits**, one per slice that makes sense on its own.
 
 ## Response

@@ -1,6 +1,6 @@
 ---
 name: ship
-description: quality-kit delivery - opens the pull request with the approved tiny plan, the evidence (screenshots and videos embedded) and the gate summary. Use when the work is done and the gate is green, or when asked to "open the PR", "ship it", "sobe o PR", "abre a PR", "manda pra review". Refuses without an approved plan, with changed screens and no fresh evidence, or with the gate failing.
+description: "Opens or updates the PR with `quality-kit ship`: the approved tiny plan, fresh evidence and the gate summary. Use when the work is done and the gate is green, or when asked to open the PR (\"ship it\", \"abre a PR\")."
 ---
 
 # ship: the PR tells the whole story
@@ -16,6 +16,8 @@ description: quality-kit delivery - opens the pull request with the approved tin
 4. **Ship:** `quality-kit ship` pushes the branch, uploads the images and
    videos as GitHub attachments (never committed to the repo) and opens the PR
    against the ruleset's base (`--base <branch>` and `--title <text>` override).
+   If the branch already has an open PR, it rewrites that PR's title and body:
+   after review changes, recapture the evidence and ship again.
 5. **Upload failures:** the PR lists the local paths instead and the command
    says which files failed. Tell the owner in your response, with the paths.
 

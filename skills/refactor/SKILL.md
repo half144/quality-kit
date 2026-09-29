@@ -1,11 +1,12 @@
 ---
 name: refactor
-description: quality-kit refactoring playbook, picked by the task router. Use to extract, move, rename, split a large file, move a piece up to shared code, or pay down lint or type debt, without changing what the system does ("refactor", "extract", "split this file", "clean up", "move"). Lock in the behavior with characterization tests before touching anything and prove identical behavior afterwards.
+description: "quality-kit refactor playbook: characterization tests first, same behavior proven after. Loaded by the task skill for a change of shape without a change of behavior; start with task."
+user-invocable: false
 ---
 
 # refactor
 
-Copy these steps into the task list before you start (see `task`).
+Copy these steps into the task list after the plan's ok (see the `task` skill).
 Refactoring is changing the shape without changing the behavior. A bug along the
 way: note it and fix it later, through `bug-fix`.
 
@@ -22,7 +23,7 @@ way: note it and fix it later, through `bug-fix`.
    code carries its own frozen debt; a new file is born clean.
 5. **Prove identical behavior:** the same tests, without changing a single
    expectation. Affected screens go through `quality-kit verify --changed`.
-6. **Verify:** `task/references/verification.md`. Measure the largest files you
+6. **Verify:** [the task skill's verification](../task/references/verification.md). Measure the largest files you
    touched: no new giant file. The baseline shrinks on its own when you fix old
    debt; it never grows.
 7. **Revert if it didn't get better.**

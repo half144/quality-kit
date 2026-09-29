@@ -1,6 +1,6 @@
 ---
 name: verify
-description: quality-kit on-screen proof. Use when the change touches a screen (component, style, route), when the gate reports "On-screen proof", or when asked to "open the screen and check", "prove it works", "check it in the browser", "run verify" ("abre a tela e confere"). Starts the app with the ruleset's command, opens the affected screens on desktop and mobile (iPhone 14), fails on console errors, exceptions, hydration errors, broken assets and blank screens, and writes the report the gate checks.
+description: "Runs `quality-kit verify`, the on-screen proof the gate requires: opens the changed screens on desktop and mobile and fails on console errors, crashes and blank screens. Use when a change touches a screen or the gate reports \"On-screen proof\"."
 ---
 
 # verify: on-screen proof

@@ -1,6 +1,6 @@
 ---
 name: evidence
-description: quality-kit PR evidence - screenshots (desktop and phone, framed like a browser window and a drawn iPhone, optionally marked) and short videos of interactions, recorded for the current state of the files. Use after the gate is green on a change that touches a screen, when ship says "no evidence for the current files", or when asked for "prints", "screenshots for the PR", "a video of the flow", "evidence", "before and after", "marca o bug no print".
+description: "Captures PR evidence with `quality-kit evidence`: framed desktop and phone stills (clean by default, marked only for a bug repro) and short videos of interactions. Use before ship on a change that touches a screen, or when asked for screenshots or a video for the PR."
 ---
 
 # evidence: what the reviewer sees
