@@ -5,6 +5,7 @@ import { buildConfig } from '../src/setup/config-builder.mjs';
 import { shapeOf, stackOf, workspacePatterns } from '../src/setup/detect.mjs';
 import { architectureDoc, featureMapDoc } from '../src/setup/docs.mjs';
 import { hookBlock, mergeHook } from '../src/setup/githooks.mjs';
+import { hookNames } from '../src/setup/init.mjs';
 import { DENY, mergeAgents, mergeDeny, workflowSource } from '../src/setup/team.mjs';
 import { flagsToOptions, overlaySource } from '../src/lint/overlay.mjs';
 import { parseFeatureMap } from '../src/verify/feature-map.mjs';
@@ -89,4 +90,9 @@ test('config do ESLint: projeto por baixo, preset do kit e extras por cima', () 
 
 test('flags do tsc viram compilerOptions do tsconfig estrito do lint', () => {
   assert.deepEqual(flagsToOptions(['--strict', '--target', 'es2022', '--noUncheckedIndexedAccess']), { strict: true, target: 'es2022', noUncheckedIndexedAccess: true });
+});
+
+test('hook desligado na régua não é instalado', () => {
+  assert.deepEqual(hookNames({ preCommit: 'off', prePush: 'fast' }), ['pre-push']);
+  assert.deepEqual(hookNames({ preCommit: 'fast', prePush: 'full' }), ['pre-commit', 'pre-push']);
 });

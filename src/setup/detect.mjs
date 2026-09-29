@@ -67,7 +67,8 @@ function tsconfigsOf(dir, has) {
   const tsconfig = readFileSync(join(dir, 'tsconfig.json'), 'utf8');
   const references = [...tsconfig.matchAll(/"path"\s*:\s*"([^"]+)"/g)].map(([, path]) => path.replace(/^\.\//, ''));
   const solutionStyle = /"files"\s*:\s*\[\s*\]/.test(tsconfig) && references.length > 0;
-  return solutionStyle ? references.map((path) => (path.endsWith('.json') ? path : `${path}/tsconfig.json`)) : ['tsconfig.json'];
+  const referenced = references.map((path) => (path.endsWith('.json') ? path : `${path}/tsconfig.json`));
+  return solutionStyle ? referenced : ['tsconfig.json', ...referenced];
 }
 
 function srcDirOf(dir, has) {

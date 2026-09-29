@@ -96,7 +96,7 @@ const TYPESCRIPT = ["**/*.{ts,tsx,mts,cts}"];
  * instância que o projeto já registrou (o ESLint recusa o mesmo nome com dois
  * objetos diferentes).
  */
-function buildQuality({ plugins, tsconfigRootDir, tsconfigs = [], restrictedSyntax = [] }) {
+function buildQuality({ plugins, tsconfigRootDir, tsconfigs = [], untyped = [], restrictedSyntax = [] }) {
   // Com os tsconfig estritos gerados pelo kit, o lint vê os mesmos tipos que o
   // typecheck; sem tsconfig, o project service acha o mais próximo.
   const parserOptions = tsconfigs.length > 0 ? { project: tsconfigs, tsconfigRootDir } : { projectService: true, tsconfigRootDir };
@@ -120,6 +120,7 @@ function buildQuality({ plugins, tsconfigRootDir, tsconfigs = [], restrictedSynt
     },
     {
       files: TYPESCRIPT,
+      ignores: untyped,
       plugins: { "@typescript-eslint": plugins.typescript },
       languageOptions: { parser: plugins.parser, parserOptions },
       rules: TYPESCRIPT_RULES,

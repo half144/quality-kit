@@ -72,7 +72,12 @@ function hooksDir(repo) {
   return git(repo, 'rev-parse', '--git-path', 'hooks');
 }
 
-function installGitHooks(project, mode) {
+/** Só os hooks que a régua liga (`off` não instala). */
+export function hookNames(hooks) {
+  return [['pre-commit', hooks.preCommit], ['pre-push', hooks.prePush]].filter(([, profile]) => profile && profile !== 'off').map(([name]) => name);
+}
+
+function installGitHooks(project, mode, names) {
   const configured = (() => {
     try {
       return git(project.repo, 'config', '--get', 'core.hooksPath');
@@ -83,12 +88,12 @@ function installGitHooks(project, mode) {
   if (mode === 'team') {
     const dir = configured && !configured.startsWith('/') ? configured : '.githooks';
     if (!configured) git(project.repo, 'config', 'core.hooksPath', dir);
-    return { installed: installHooks(join(project.repo, dir)), note: configured ? null : `core.hooksPath apontado para ${dir} (cada clone precisa do mesmo: ponha \`git config core.hooksPath ${dir}\` no script de preparo).` };
+    return { installed: installHooks(join(project.repo, dir), names), note: configured ? null : `core.hooksPath apontado para ${dir} (cada clone precisa do mesmo: ponha \`git config core.hooksPath ${dir}\` no script de preparo).` };
   }
   const dir = join(project.repo, hooksDir(project.repo));
   const tracked = listFiles(project.repo).some((file) => join(project.repo, file).startsWith(`${dir}/`));
   if (tracked) return { installed: [], note: `core.hooksPath aponta para uma pasta versionada (${dir}): no modo local o kit não mexe nela. Chame \`quality-kit git-hook pre-push\` de lá, se quiser.` };
-  return { installed: installHooks(dir), note: null };
+  return { installed: installHooks(dir, names), note: null };
 }
 
 function debtSummary(state) {
@@ -107,7 +112,7 @@ export async function finalizeProject(cwd) {
   const config = JSON.parse(JSON.stringify(loadConfig(project.rulesDir)));
   const notes = await probeTools(project, config);
   const debt = await freezeDebt(project, config);
-  const hooks = installGitHooks(project, project.mode);
+  const hooks = installGitHooks(project, project.mode, hookNames(config.hooks));
   const teamFiles = project.mode === 'team' ? writeTeamFiles(project.repo, config) : [];
   writeJson(join(project.rulesDir, 'config.json'), { ...config, status: 'active' });
   const active = loadConfig(project.rulesDir);

@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { listFiles } from '../git/git.mjs';
 import { normalizeApps } from './apps.mjs';
 import { mapGaps, parseFeatureMap } from './feature-map.mjs';
-import { mapPath } from './proof.mjs';
+import { docPath } from '../config.mjs';
 
 function missingRow(screen) {
   const dynamic = /\[/.test(screen.route);
@@ -33,7 +33,7 @@ export function withMissingRows(markdown, apps, missing) {
 
 export function mapCommand({ project, config }, argv) {
   const apps = normalizeApps(config.verify);
-  const path = mapPath(project);
+  const path = docPath(project, config, 'map');
   const markdown = readFileSync(path, 'utf8');
   const { missing, stale } = mapGaps(apps, parseFeatureMap(markdown, apps), listFiles(project.repo));
   if (argv.includes('--write') && missing.length > 0) writeFileSync(path, withMissingRows(markdown, apps, missing));

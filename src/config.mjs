@@ -28,6 +28,7 @@ const DEFAULTS = {
   jscpd: { paths: ['src'], minTokens: 50, minLines: 5 },
   verify: { apps: [] },
   integrity: { protect: [] },
+  docs: { architecture: null, map: null },
 };
 
 export function withDefaults(config) {
@@ -41,6 +42,7 @@ export function withDefaults(config) {
     lint: { ...DEFAULTS.lint, ...config.lint },
     jscpd: { ...DEFAULTS.jscpd, ...config.jscpd },
     integrity: { ...DEFAULTS.integrity, ...config.integrity },
+    docs: { ...DEFAULTS.docs, ...config.docs },
     workspaces: (config.workspaces ?? DEFAULTS.workspaces).map(normalizeWorkspace),
   };
 }
@@ -75,4 +77,13 @@ export function tscBaselinePath(rulesDir) {
 
 export function architectureBaselinePath(rulesDir) {
   return join(rulesDir, 'baseline', 'architecture.json');
+}
+
+/**
+ * Onde moram o texto da arquitetura e o mapa de telas: na pasta da régua, ou
+ * num caminho do repo (`docs`), para o projeto que já tem os dele.
+ */
+export function docPath(project, config, name) {
+  const inRepo = config.docs[name];
+  return inRepo ? join(project.repo, inRepo) : join(project.rulesDir, name === 'map' ? 'FEATURE_MAP.md' : 'ARCHITECTURE.md');
 }

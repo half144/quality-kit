@@ -9,7 +9,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { ALL_CHECKS, FAST_CHECKS } from '../config.mjs';
+import { ALL_CHECKS, docPath, FAST_CHECKS } from '../config.mjs';
 import { baseRefs, branchChanges, mergeBase } from '../git/git.mjs';
 import { currentState } from '../integrity/state.mjs';
 import { ensureDir } from '../project.mjs';
@@ -41,7 +41,6 @@ async function staticProblems(context, checks) {
   const { config, changes } = context;
   const groups = groupByWorkspace(config.workspaces, changes.changed);
   const typed = groupByWorkspace(config.workspaces, changes.changed, TYPED);
-  const docPath = join(context.project.rulesDir, 'ARCHITECTURE.md');
   const slow = await Promise.all([
     ...(checks.has('lint') ? groups.map((group) => lintProblem(context, group)) : []),
     ...(checks.has('typecheck') ? typed.map((group) => typecheckProblem(context, group)) : []),
@@ -50,7 +49,7 @@ async function staticProblems(context, checks) {
     checks.has('jscpd') ? duplicationProblem(context) : null,
   ]);
   return [
-    checks.has('architecture') ? architectureProblem({ ...context, docPath }) : null,
+    checks.has('architecture') ? architectureProblem({ ...context, docPath: docPath(context.project, config, 'architecture') }) : null,
     checks.has('testsAlongside') ? testsAlongsideProblem(context) : null,
     ...slow,
   ].filter(Boolean);

@@ -5,6 +5,8 @@
  * prova a tela (`verify`) e cuida da trava (`rules accept`, só humano).
  */
 
+import { readFileSync } from 'node:fs';
+
 import { loadConfig } from './config.mjs';
 import { report, runGate } from './gate/gate.mjs';
 import { guardMain } from './gate/guard.mjs';
@@ -16,8 +18,8 @@ import { detect } from './setup/detect.mjs';
 import { finalizeProject, initProject } from './setup/init.mjs';
 import { gitHook } from './setup/git-hook.mjs';
 import { mapCommand } from './verify/map-command.mjs';
+import { createSpaServer } from './verify/static-server.mjs';
 import { runVerify } from './verify/verify.mjs';
-import { readFileSync } from 'node:fs';
 
 const HELP = `quality-kit <comando>
 
@@ -28,6 +30,7 @@ const HELP = `quality-kit <comando>
   gate [--profile full|fast] [--base <ref>] [--ci] [--allow-regua-change]
   verify <caminho>... | --changed | --all
   map [--write]               confere o mapa de telas contra as rotas do código
+  serve <pasta> --port <n>    serve um export estático como SPA (para o verify)
   paths                       onde moram a régua e o estado deste projeto
   rules status                a régua de agora bate com a aceita?
   rules accept                aceita a régua de agora (só humano, num terminal)
@@ -63,6 +66,13 @@ async function gateCommand(argv) {
   return 1;
 }
 
+/** Fica no ar até o verify matar o processo. */
+function serveSpa(dir, port) {
+  return new Promise(() => {
+    createSpaServer(dir).listen(port, '127.0.0.1');
+  });
+}
+
 function print(value) {
   process.stdout.write(`${typeof value === 'string' ? value : JSON.stringify(value, null, 2)}\n`);
   return 0;
@@ -86,6 +96,7 @@ const COMMANDS = {
   },
   map: (argv) => mapCommand(activeProject(), argv),
   paths: () => print(locateProject(process.cwd())),
+  serve: (argv) => serveSpa(argv[0], Number(option(argv, '--port'))),
   rules: (argv) => {
     if (argv[0] === 'accept') return acceptRules();
     if (argv[0] === 'status') return rulesStatus();

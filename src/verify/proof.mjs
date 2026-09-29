@@ -9,6 +9,7 @@ import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
+import { docPath } from '../config.mjs';
 import { git, listFiles } from '../git/git.mjs';
 import { affectedScreens, isUiFile, targetsOf } from './affected.mjs';
 import { normalizeApps, targetKey } from './apps.mjs';
@@ -21,12 +22,8 @@ export function reportPath(project) {
   return join(project.stateDir, 'verify', 'report.json');
 }
 
-export function mapPath(project) {
-  return join(project.rulesDir, 'FEATURE_MAP.md');
-}
-
-export function loadScreens(project, apps) {
-  const path = mapPath(project);
+export function loadScreens(project, config, apps) {
+  const path = docPath(project, config, 'map');
   return existsSync(path) ? parseFeatureMap(readFileSync(path, 'utf8'), apps) : [];
 }
 
@@ -56,7 +53,7 @@ function importersFinder(repo) {
 
 export function changedTargets(project, config, files) {
   const apps = normalizeApps(config.verify);
-  return targetsOf(affectedScreens(apps, loadScreens(project, apps), files, importersFinder(project.repo)));
+  return targetsOf(affectedScreens(apps, loadScreens(project, config, apps), files, importersFinder(project.repo)));
 }
 
 /** A mudança mexe em tela? Se sim, que alvos o relatório precisa ter aprovados. */
@@ -105,13 +102,13 @@ export function proofProblem({ apps, report, tree, targets }) {
 /** Tela nova sem linha no mapa: sem ela, o verify não sabe abrir. */
 export function mapProblem(project, config, changed) {
   const apps = normalizeApps(config.verify);
-  const { missing } = mapGaps(apps, loadScreens(project, apps), listFiles(project.repo));
+  const { missing } = mapGaps(apps, loadScreens(project, config, apps), listFiles(project.repo));
   const touched = missing.filter((screen) => {
     const app = apps.find((entry) => entry.name === screen.app);
     return changed.includes(app.routesDir + screen.file);
   });
   if (touched.length === 0) return null;
-  return `Tela sem linha no mapa de telas (${mapPath(project)}): ${touched.map((screen) => `${screen.app} ${screen.file}`).join(', ')}. Use a skill \`map\` para acrescentar a rota e o caminho de demonstração.`;
+  return `Tela sem linha no mapa de telas (${docPath(project, config, 'map')}): ${touched.map((screen) => `${screen.app} ${screen.file}`).join(', ')}. Use a skill \`map\` para acrescentar a rota e o caminho de demonstração.`;
 }
 
 export function proofCheck(project, config, changed, readState = () => ({ report: readReport(project), tree: treeHash(project.repo) })) {

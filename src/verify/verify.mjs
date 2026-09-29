@@ -56,7 +56,7 @@ function unique(targets) {
 function requestedTargets(project, config, apps, args) {
   const deduced = [];
   if (args.changed) deduced.push(...changedTargets(project, config, branchChanges(project.repo, mergeBase(project.repo, baseRefs(config.base))).changed));
-  if (args.all) deduced.push(...targetsOf(loadScreens(project, apps)));
+  if (args.all) deduced.push(...targetsOf(loadScreens(project, config, apps)));
   return unique([...args.targets, ...deduced]);
 }
 

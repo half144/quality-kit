@@ -6,12 +6,13 @@
  */
 
 import { existsSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { slug } from '../config.mjs';
 import { ensureDir } from '../project.mjs';
-import { depsRoot, KIT_ROOT, MissingDepsError } from '../runtime.mjs';
+import { listFiles } from '../git/git.mjs';
+import { depsRoot, KIT_ROOT, loadDep, MissingDepsError } from '../runtime.mjs';
 
 const CONFIG_NAMES = ['eslint.config.js', 'eslint.config.mjs', 'eslint.config.cjs'];
 export const DEFAULT_IGNORES = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**', '**/out/**', '**/coverage/**', '**/*.d.ts', '**/_generated/**'];
@@ -27,7 +28,7 @@ export function findProjectConfig(repo, workspaceDir, exists = existsSync) {
 }
 
 /** O texto do módulo de config. Puro, para dar para testar sem ESLint. */
-export function overlaySource({ deps, presetPath, projectConfig, extraRules, tsconfigRootDir, tsconfigs = [], ignores }) {
+export function overlaySource({ deps, presetPath, projectConfig, extraRules, tsconfigRootDir, tsconfigs = [], untyped = [], ignores }) {
   const json = JSON.stringify;
   const projectLine = projectConfig
     ? `[(await import(${json(pathToFileURL(projectConfig).href)})).default].flat(Infinity)`
@@ -62,6 +63,7 @@ export default warningsAsErrors([
     },
     tsconfigRootDir: ${json(tsconfigRootDir)},
     tsconfigs: ${json(tsconfigs)},
+    untyped: ${json(untyped)},
     restrictedSyntax: extra.restrictedSyntax ?? [],
   }),
   ...[extra.configs ?? []].flat(Infinity),
@@ -103,18 +105,41 @@ export function writeStrictTsconfigs({ project, config, workspace }) {
     });
 }
 
+/**
+ * Os arquivos TS do workspace que nenhum tsconfig inclui (config de
+ * ferramenta, script solto): sem programa, o lint com tipos não tem como
+ * rodar neles, então eles levam só as regras sem tipo.
+ */
+export function untypedFiles(workspaceFiles, covered) {
+  return workspaceFiles.filter((file) => /\.[cm]?tsx?$/.test(file) && !file.endsWith('.d.ts') && !covered.has(file));
+}
+
+function coveredFiles(tsconfigs, root) {
+  const ts = loadDep('typescript');
+  const host = { ...ts.sys, onUnRecoverableConfigFileDiagnostic: () => undefined };
+  const covered = new Set();
+  for (const tsconfig of tsconfigs) {
+    for (const file of ts.getParsedCommandLineOfConfigFile(tsconfig, {}, host)?.fileNames ?? []) covered.add(relative(root, file).split('\\').join('/'));
+  }
+  return covered;
+}
+
 /** Grava a config do workspace e devolve o caminho dela. */
 export function writeOverlay({ project, config, workspace }) {
   const deps = depsRoot();
   if (!deps) throw new MissingDepsError();
   const extraPath = join(project.rulesDir, config.lint.extraRules);
+  const root = join(project.repo, workspace.dir);
+  const tsconfigs = writeStrictTsconfigs({ project, config, workspace });
+  const workspaceFiles = listFiles(project.repo).filter((file) => file.startsWith(workspace.dir)).map((file) => file.slice(workspace.dir.length));
   const source = overlaySource({
     deps,
     presetPath: join(KIT_ROOT, 'src', 'lint', 'preset.cjs'),
     projectConfig: config.lint.projectConfig === false ? null : findProjectConfig(project.repo, workspace.dir),
     extraRules: existsSync(extraPath) ? extraPath : null,
-    tsconfigRootDir: join(project.repo, workspace.dir),
-    tsconfigs: writeStrictTsconfigs({ project, config, workspace }),
+    tsconfigRootDir: root,
+    tsconfigs,
+    untyped: tsconfigs.length > 0 ? untypedFiles(workspaceFiles, coveredFiles(tsconfigs, root)) : [],
     ignores: [...DEFAULT_IGNORES, ...(config.lint.ignores ?? [])],
   });
   const file = join(ensureDir(join(project.stateDir, 'eslint')), `${slug(workspace.dir)}.config.mjs`);

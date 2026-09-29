@@ -40,7 +40,8 @@ function namingProblems(root, parts) {
   }
   const fileName = parts.at(-1);
   const convention = isComponentFile(fileName) ? (naming.components ?? naming.files) : naming.files;
-  if (!fileName.startsWith('.') && !follows(convention, baseName(fileName))) {
+  const exempt = fileName.startsWith('.') || isTest(fileName) || (parts.length === 1 && root.rootFiles?.includes(fileName));
+  if (!exempt && !follows(convention, baseName(fileName))) {
     problems.push(['naming', `arquivo "${fileName}" fora de ${convention}.`]);
   }
   return problems;
