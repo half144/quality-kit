@@ -1,0 +1,10 @@
+{
+  "name": "quality-kit",
+  "version": "0.1.0",
+  "description": "Travas mecânicas e playbooks para agentes de código entregarem com qualidade: gate no Stop, trava de integridade da régua, lint com tipos, TS estrito, testes, arquitetura e prova na tela.",
+  "author": { "name": "half144", "url": "https://github.com/half144" },
+  "homepage": "https://github.com/half144/quality-kit",
+  "repository": "https://github.com/half144/quality-kit",
+  "license": "MIT",
+  "keywords": ["quality", "gate", "hooks", "eslint", "typescript", "playbooks", "agents"]
+}

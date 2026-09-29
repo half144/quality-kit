@@ -1,0 +1,52 @@
+{
+  "description": "quality-kit: o gate antes de o agente encerrar e a guarda da trava de integridade. Só age nos projetos onde a skill setup montou o kit.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/quality-kit.mjs\" hook",
+            "timeout": 900,
+            "statusMessage": "quality-kit: gate da mudança"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/quality-kit.mjs\" hook",
+            "timeout": 900,
+            "statusMessage": "quality-kit: gate do subagente"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/quality-kit.mjs\" hook",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/quality-kit.mjs\" guard",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
