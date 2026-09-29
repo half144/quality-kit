@@ -14,6 +14,8 @@
  * Only here, on top of the gate: a branch with code changes needs a tiny plan
  * the owner approved (`requirePlan`). While a saved plan waits for the ok and
  * no code moved since, the turn may end without the gate: the agent is asking.
+ * A Stop then exits 0 with `{"systemMessage": ...}` on stdout, the official
+ * way to show the owner a line without blocking.
  */
 
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -22,7 +24,7 @@ import { join } from 'node:path';
 import { loadConfig } from '../config.mjs';
 import { baseRefs, branchChanges, mergeBase } from '../git/git.mjs';
 import { currentState } from '../integrity/state.mjs';
-import { branchPlanState } from '../plan/plan-check.mjs';
+import { AWAITING_NOTICE, branchPlanState } from '../plan/plan-check.mjs';
 import { ensureDir, locateProject } from '../project.mjs';
 import { report, runGate } from './gate.mjs';
 
@@ -55,7 +57,10 @@ function activeProject(cwd) {
   }
 }
 
-/** Handles the event; returns the blocking message or null. */
+/**
+ * Handles the event: `{ block }` keeps the agent working with the report,
+ * `{ notice }` lets the turn end with a line for the owner, null says nothing.
+ */
 export async function handleHook(input) {
   process.env.QUALITY_KIT_HOOK = '1';
   const found = activeProject(input.cwd ?? process.cwd());
@@ -68,9 +73,9 @@ export async function handleHook(input) {
   }
   if (input.hook_event_name === 'SubagentStop' && subagentUntouched(project, config, input.agent_id)) return null;
   const plan = branchPlanState(project, config);
-  if (plan.awaiting) return null;
+  if (plan.awaiting) return input.hook_event_name === 'Stop' ? { notice: AWAITING_NOTICE } : null;
   const problems = [plan.problem, ...(await runGate({ project, config, profile: 'full' }))].filter(Boolean);
-  return problems.length === 0 ? null : report(problems);
+  return problems.length === 0 ? null : { block: report(problems) };
 }
 
 async function readStdin() {
@@ -82,9 +87,13 @@ async function readStdin() {
 export async function hookMain() {
   const input = JSON.parse((await readStdin()) || '{}');
   try {
-    const message = await handleHook(input);
-    if (!message) return 0;
-    console.error(message);
+    const outcome = await handleHook(input);
+    if (!outcome) return 0;
+    if (outcome.notice) {
+      process.stdout.write(JSON.stringify({ systemMessage: outcome.notice }));
+      return 0;
+    }
+    console.error(outcome.block);
   } catch (error) {
     console.error(`quality-kit: the gate could not run: ${error instanceof Error ? error.message : error}`);
   }

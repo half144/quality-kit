@@ -4,7 +4,8 @@
  * the plan lives on the owner's machine.
  *
  * A plan saved and waiting for the owner's ok, with no code changed since it
- * was saved, lets the turn end: the agent has to stop to ask.
+ * was saved, lets the turn end: the agent has to stop to ask. The owner gets
+ * a notice, so the silence is not mistaken for finished work.
  */
 
 import { baseRefs, branchChanges, mergeBase } from '../git/git.mjs';
@@ -18,6 +19,9 @@ const MESSAGES = {
   draft: 'The tiny plan for this branch is not approved: show it to the owner, wait for an explicit ok in chat, then run `quality-kit plan approve`.',
   stale: 'The tiny plan changed after the owner approved it: show the new version and get a new ok before `quality-kit plan approve`.',
 };
+
+/** Shown to the owner (not the agent) when the turn ends waiting for the ok. */
+export const AWAITING_NOTICE = 'quality-kit: waiting for your ok on the plan (quality-kit plan show)';
 
 const TO_ASK = 'The code changed after the plan was saved: stop editing, save the plan again as it stands (`quality-kit plan write`), show it and end the turn waiting for the ok.';
 
@@ -44,9 +48,9 @@ export function changesFingerprint(project, config) {
 export function branchPlanState(project, config) {
   if (!config.requirePlan) return { awaiting: false, problem: null };
   const { changed, fingerprint } = branchChanges(project.repo, mergeBase(project.repo, baseRefs(config.base)));
-  if (!hasCodeChanges(changed)) return { awaiting: false, problem: null };
   const plan = readPlan(branchDir(project));
   if (awaitingOk(plan, fingerprint)) return { awaiting: true, problem: null };
+  if (!hasCodeChanges(changed)) return { awaiting: false, problem: null };
   const problem = planProblem(plan.status);
   return { awaiting: false, problem: problem && plan.status !== 'missing' ? `${problem} ${TO_ASK}` : problem };
 }

@@ -146,7 +146,8 @@ The agent saves it (`quality-kit plan write`), shows it and stops. You answer
 starts coding. The approval is bound to the plan's text: an edited plan needs
 a new ok. While the branch has code changes and no approved plan, the Stop
 hook won't let the agent finish, except to wait for your ok on a plan it just
-saved (with no code changed since). Turn it off per project with
+saved (with no code changed since); then you see `quality-kit: waiting for your
+ok on the plan (quality-kit plan show)`. Turn it off per project with
 `"requirePlan": false` in the config.
 
 ### 3. The agent tries to finish → the gate runs

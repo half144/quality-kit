@@ -1,12 +1,13 @@
 // End to end in a temporary repo, in local mode: setup, the gate failing the
 // agent's mistakes, the integrity lock and an untouched repo.
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { after, before, test } from 'node:test';
 
+const BIN = join(import.meta.dirname, '..', 'bin', 'quality-kit.mjs');
 const home = mkdtempSync(join(tmpdir(), 'qk-home-'));
 const repo = mkdtempSync(join(tmpdir(), 'qk-repo-'));
 process.env.QUALITY_KIT_HOME = home;
@@ -15,7 +16,7 @@ const { loadConfig } = await import('../src/config.mjs');
 const { runGate } = await import('../src/gate/gate.mjs');
 const { handleHook } = await import('../src/gate/hook.mjs');
 const { branchDir } = await import('../src/branch/state.mjs');
-const { branchPlanState, changesFingerprint } = await import('../src/plan/plan-check.mjs');
+const { AWAITING_NOTICE, branchPlanState, changesFingerprint } = await import('../src/plan/plan-check.mjs');
 const { approvePlan, writePlan } = await import('../src/plan/store.mjs');
 const { locateProject } = await import('../src/project.mjs');
 const { finalizeProject, initProject } = await import('../src/setup/init.mjs');
@@ -27,6 +28,11 @@ function git(...args) {
 function write(file, content) {
   mkdirSync(dirname(join(repo, file)), { recursive: true });
   writeFileSync(join(repo, file), content);
+}
+
+/** What the Stop hook tells Claude Code: `{ block }`, `{ notice }` or null. */
+function stop() {
+  return handleHook({ hook_event_name: 'Stop', cwd: repo });
 }
 
 async function gate() {
@@ -83,16 +89,16 @@ test('the Stop hook asks for the owner-approved tiny plan once the branch change
   write('src/lib/um.ts', 'export function um(): number {\n  return 1;\n}\n');
   write('src/lib/um.test.ts', "import { um } from './um';\nif (um() !== 1) throw new Error('um');\n");
   const dir = branchDir(locateProject(repo));
-  assert.match(await handleHook({ hook_event_name: 'Stop', cwd: repo }), /write a tiny plan with the tiny-plan skill and get the owner's ok/);
+  assert.match((await stop()).block, /write a tiny plan with the tiny-plan skill and get the owner's ok/);
   assert.deepEqual(await gate(), []);
   writePlan(dir, PLAN);
-  assert.match(await handleHook({ hook_event_name: 'Stop', cwd: repo }), /not approved/);
+  assert.match((await stop()).block, /not approved/);
   approvePlan(dir);
-  assert.equal(await handleHook({ hook_event_name: 'Stop', cwd: repo }), null);
+  assert.equal(await stop(), null);
   writePlan(dir, PLAN.replace('one', 'two'));
-  assert.match(await handleHook({ hook_event_name: 'Stop', cwd: repo }), /changed after the owner approved/);
+  assert.match((await stop()).block, /changed after the owner approved/);
   writePlan(dir, PLAN);
-  assert.equal(await handleHook({ hook_event_name: 'Stop', cwd: repo }), null);
+  assert.equal(await stop(), null);
   rmSync(join(repo, 'src/lib/um.ts'));
   rmSync(join(repo, 'src/lib/um.test.ts'));
 });
@@ -103,12 +109,24 @@ test('a plan saved and waiting for the ok lets the turn end, until the code move
   const config = loadConfig(project.rulesDir);
   const dir = branchDir(project);
   writePlan(dir, PLAN.replace('one', 'three'), changesFingerprint(project, config));
-  assert.equal(await handleHook({ hook_event_name: 'Stop', cwd: repo }), null);
+  assert.deepEqual(await stop(), { notice: AWAITING_NOTICE });
+  assert.equal(await handleHook({ hook_event_name: 'SubagentStop', cwd: repo, agent_id: 'a1' }), null);
   write('src/lib/tres.ts', 'export const tres = 4;\n');
-  assert.match(await handleHook({ hook_event_name: 'Stop', cwd: repo }), /code changed after the plan was saved/);
+  assert.match((await stop()).block, /code changed after the plan was saved/);
   writePlan(dir, PLAN, changesFingerprint(project, config));
   assert.equal(branchPlanState(project, config).awaiting, false);
   rmSync(join(repo, 'src/lib/tres.ts'));
+});
+
+test('waiting for the ok, the Stop hook exits 0 and shows the owner a notice', () => {
+  const project = locateProject(repo);
+  const dir = branchDir(project);
+  writePlan(dir, PLAN.replace('one', 'four'), changesFingerprint(project, loadConfig(project.rulesDir)));
+  const hook = spawnSync(process.execPath, [BIN, 'hook'], { input: JSON.stringify({ hook_event_name: 'Stop', cwd: repo }), encoding: 'utf8' });
+  assert.equal(hook.status, 0);
+  assert.deepEqual(JSON.parse(hook.stdout), { systemMessage: 'quality-kit: waiting for your ok on the plan (quality-kit plan show)' });
+  assert.equal(hook.stderr, '');
+  writePlan(dir, PLAN);
 });
 
 test('requirePlan: false turns the plan rule off', async () => {
@@ -123,10 +141,9 @@ test('requirePlan: false turns the plan rule off', async () => {
 
 test('the Stop hook hands the report back to the agent', async () => {
   write('src/lib/nova.ts', 'export function nova(): number {\n  return 1;\n}\n');
-  const message = await handleHook({ hook_event_name: 'Stop', cwd: repo });
-  assert.match(message, /quality-kit failed this change[\s\S]*src\/lib\/nova\.ts/);
+  assert.match((await stop()).block, /quality-kit failed this change[\s\S]*src\/lib\/nova\.ts/);
   write('src/lib/nova.test.ts', "import { nova } from './nova';\nif (nova() !== 1) throw new Error('nova');\n");
-  assert.equal(await handleHook({ hook_event_name: 'Stop', cwd: repo }), null);
+  assert.equal(await stop(), null);
   rmSync(join(repo, 'src/lib/nova.ts'));
   rmSync(join(repo, 'src/lib/nova.test.ts'));
 });
