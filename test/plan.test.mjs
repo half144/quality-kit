@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 
 import { branchSlug } from '../src/branch/state.mjs';
-import { hasCodeChanges, planProblem } from '../src/plan/plan-check.mjs';
+import { awaitingOk, hasCodeChanges, planProblem } from '../src/plan/plan-check.mjs';
 import { MAX_LINES, parsePlan, planErrors, planHash, planStatus } from '../src/plan/plan.mjs';
 import { approvePlan, readPlan, writePlan } from '../src/plan/store.mjs';
 
@@ -72,6 +72,27 @@ test('plan rule: code changes need an approved plan; docs alone do not', () => {
   assert.match(planProblem('draft'), /not approved/);
   assert.match(planProblem('stale'), /changed after the owner approved/);
   assert.equal(planProblem('approved'), null);
+});
+
+test('awaiting the ok: a saved, unapproved plan with no code moved since it was saved', () => {
+  const written = { changes: 'abc' };
+  assert.equal(awaitingOk({ status: 'draft', written }, 'abc'), true);
+  assert.equal(awaitingOk({ status: 'stale', written }, 'abc'), true);
+  assert.equal(awaitingOk({ status: 'draft', written }, 'def'), false);
+  assert.equal(awaitingOk({ status: 'approved', written }, 'abc'), false);
+  assert.equal(awaitingOk({ status: 'draft', written: null }, 'abc'), false);
+  assert.equal(awaitingOk({ status: 'draft', written: { changes: null } }, 'abc'), false);
+});
+
+test('store: the plan remembers the change fingerprint it was saved on', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'qk-plan-'));
+  try {
+    assert.equal(readPlan(dir).written, null);
+    assert.deepEqual(writePlan(dir, PLAN, 'abc').written, { changes: 'abc' });
+    assert.deepEqual(writePlan(dir, PLAN).written, { changes: null });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test('branch folders: one per branch name, safe on disk', () => {

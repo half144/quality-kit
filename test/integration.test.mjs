@@ -15,7 +15,7 @@ const { loadConfig } = await import('../src/config.mjs');
 const { runGate } = await import('../src/gate/gate.mjs');
 const { handleHook } = await import('../src/gate/hook.mjs');
 const { branchDir } = await import('../src/branch/state.mjs');
-const { branchPlanProblem } = await import('../src/plan/plan-check.mjs');
+const { branchPlanState, changesFingerprint } = await import('../src/plan/plan-check.mjs');
 const { approvePlan, writePlan } = await import('../src/plan/store.mjs');
 const { locateProject } = await import('../src/project.mjs');
 const { finalizeProject, initProject } = await import('../src/setup/init.mjs');
@@ -97,12 +97,26 @@ test('the Stop hook asks for the owner-approved tiny plan once the branch change
   rmSync(join(repo, 'src/lib/um.test.ts'));
 });
 
+test('a plan saved and waiting for the ok lets the turn end, until the code moves again', async () => {
+  write('src/lib/tres.ts', 'export const tres = 3;\n');
+  const project = locateProject(repo);
+  const config = loadConfig(project.rulesDir);
+  const dir = branchDir(project);
+  writePlan(dir, PLAN.replace('one', 'three'), changesFingerprint(project, config));
+  assert.equal(await handleHook({ hook_event_name: 'Stop', cwd: repo }), null);
+  write('src/lib/tres.ts', 'export const tres = 4;\n');
+  assert.match(await handleHook({ hook_event_name: 'Stop', cwd: repo }), /code changed after the plan was saved/);
+  writePlan(dir, PLAN, changesFingerprint(project, config));
+  assert.equal(branchPlanState(project, config).awaiting, false);
+  rmSync(join(repo, 'src/lib/tres.ts'));
+});
+
 test('requirePlan: false turns the plan rule off', async () => {
   write('src/lib/dois.ts', 'export const dois = 2;\n');
   const project = locateProject(repo);
   rmSync(join(branchDir(project), 'approval.json'));
-  assert.match(branchPlanProblem(project, loadConfig(project.rulesDir)), /not approved/);
-  assert.equal(branchPlanProblem(project, { ...loadConfig(project.rulesDir), requirePlan: false }), null);
+  assert.match(branchPlanState(project, loadConfig(project.rulesDir)).problem, /not approved/);
+  assert.equal(branchPlanState(project, { ...loadConfig(project.rulesDir), requirePlan: false }).problem, null);
   approvePlan(branchDir(project));
   rmSync(join(repo, 'src/lib/dois.ts'));
 });

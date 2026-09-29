@@ -12,7 +12,8 @@
  * SubagentStart records the state and SubagentStop only enforces if it changed.
  *
  * Only here, on top of the gate: a branch with code changes needs a tiny plan
- * the owner approved (`requirePlan`).
+ * the owner approved (`requirePlan`). While a saved plan waits for the ok and
+ * no code moved since, the turn may end without the gate: the agent is asking.
  */
 
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -21,7 +22,7 @@ import { join } from 'node:path';
 import { loadConfig } from '../config.mjs';
 import { baseRefs, branchChanges, mergeBase } from '../git/git.mjs';
 import { currentState } from '../integrity/state.mjs';
-import { branchPlanProblem } from '../plan/plan-check.mjs';
+import { branchPlanState } from '../plan/plan-check.mjs';
 import { ensureDir, locateProject } from '../project.mjs';
 import { report, runGate } from './gate.mjs';
 
@@ -66,7 +67,9 @@ export async function handleHook(input) {
     return null;
   }
   if (input.hook_event_name === 'SubagentStop' && subagentUntouched(project, config, input.agent_id)) return null;
-  const problems = [branchPlanProblem(project, config), ...(await runGate({ project, config, profile: 'full' }))].filter(Boolean);
+  const plan = branchPlanState(project, config);
+  if (plan.awaiting) return null;
+  const problems = [plan.problem, ...(await runGate({ project, config, profile: 'full' }))].filter(Boolean);
   return problems.length === 0 ? null : report(problems);
 }
 

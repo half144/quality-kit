@@ -1,4 +1,7 @@
-/** The tiny plan on disk: `plan.md` and `approval.json` in the branch folder. */
+/**
+ * The tiny plan on disk, in the branch folder: `plan.md`, `approval.json` and
+ * `written.json` (the branch's change fingerprint when the plan was saved).
+ */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -15,17 +18,24 @@ function approvalPath(dir) {
   return join(dir, 'approval.json');
 }
 
+function writtenPath(dir) {
+  return join(dir, 'written.json');
+}
+
 export function readPlan(dir) {
   const text = existsSync(planPath(dir)) ? readFileSync(planPath(dir), 'utf8') : null;
   const approval = readJson(approvalPath(dir));
-  return { text, approval, status: planStatus(text, approval) };
+  const written = readJson(writtenPath(dir));
+  return { text, approval, written, status: planStatus(text, approval) };
 }
 
-export function writePlan(dir, text) {
+/** `changes`: the branch's change fingerprint now, so the Stop hook knows no code moved while the plan waits for the ok. */
+export function writePlan(dir, text, changes = null) {
   const errors = planErrors(text);
   if (errors.length > 0) throw new Error(`Not a tiny plan:\n${errors.map((error) => `  ${error}`).join('\n')}`);
   ensureDir(dir);
   writeFileSync(planPath(dir), `${text.trim()}\n`);
+  writeFileSync(writtenPath(dir), `${JSON.stringify({ changes }, null, 2)}\n`);
   return readPlan(dir);
 }
 
