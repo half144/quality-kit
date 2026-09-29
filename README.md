@@ -15,6 +15,9 @@ quality work:
   real browser (desktop and mobile) before it's allowed to stop.
 - **They follow a method.** Bug fixes start with a failing test, refactors pin
   behavior first, perf changes are measured before and after.
+- **They ask before they build.** Every change starts with a five-line plan
+  you approve in chat, and ends in a PR that carries the plan, screenshots or
+  a video, and the checks that passed.
 
 It works on existing codebases: today's debt is frozen and can only shrink,
 and new code is born clean.
@@ -30,6 +33,9 @@ and new code is born clean.
  agent picks a playbook (bug-fix, feature, refactor, perf, investigation)
         │
         ▼
+ agent writes a tiny plan ── you say ok in chat
+        │
+        ▼
  agent writes code ─────────────────────────────┐
         │                                        │
         ▼                                        │
@@ -39,7 +45,7 @@ and new code is born clean.
  fails     passes                                │
    │         │                                   │
    │         ▼                                   │
-   │   done ✓ (commit / push / PR)               │
+   │   evidence (screenshots, video) → ship (PR) │
    │                                             │
    └── report goes back to the agent ────────────┘
        "fix these before you can stop"
@@ -72,8 +78,8 @@ codex plugin add quality-kit@quality-kit
 
 The `setup` skill reads the project (stack, folders, scripts, routes), asks you
 3–5 questions, writes the ruleset, measures today's debt and freezes it. The
-tools it needs (eslint, typescript-eslint, knip, jscpd, playwright) are
-installed once in `~/.quality-kit/`, never in your project.
+tools it needs (eslint, typescript-eslint, knip, jscpd, playwright, cutaway)
+are installed once in `~/.quality-kit/`, never in your project.
 
 **3. Work normally.** From now on every agent in this project is held to the
 ruleset. Nothing else to do.
@@ -98,7 +104,26 @@ agent's task list:
 | `perf` | measure before and after; no number, no merge |
 | `investigation` | explain the system without changing code |
 
-### 2. The agent tries to finish → the gate runs
+### 2. The agent writes a tiny plan and waits for your ok
+
+Before any code, five lines you can read in a few seconds:
+
+```
+Goal: the host sees how many guests confirmed
+Context: the guest page only says "nobody confirmed", with no way to change it
+Where: src/features/guests/guest-list.tsx, the /guests screen
+How it works: a "Confirm" button on each guest adds one to the count.
+Proof: desktop and phone stills of /guests, a short video confirming two guests
+```
+
+The agent saves it (`quality-kit plan write`), shows it and stops. You answer
+"ok" (or ask for changes); only then it runs `quality-kit plan approve` and
+starts coding. The approval is bound to the plan's text: an edited plan needs
+a new ok. While the branch has code changes and no approved plan, the Stop
+hook won't let the agent finish. Turn it off per project with
+`"requirePlan": false` in the config.
+
+### 3. The agent tries to finish → the gate runs
 
 Only on the files the branch changed, so it's fast. If something fails, Claude
 Code blocks the stop and hands the report back:
@@ -113,7 +138,7 @@ ESLint: no-explicit-any, no-unsafe-call, no-unsafe-member-access
 
 The agent fixes it and tries again. It can't talk its way out.
 
-### 3. Changed a screen? Prove it
+### 4. Changed a screen? Prove it
 
 ```
 quality-kit verify --changed
@@ -124,15 +149,54 @@ on desktop and iPhone, and fails on console errors, hydration errors, broken
 assets or an empty page. The gate only accepts a proof made on the current
 state of the files: edit again, prove again.
 
-### 4. Commit and push
+### 5. Evidence for the reviewer
+
+```
+quality-kit evidence still /guests --mark "[data-testid=count]" --expected "the confirmed count"
+quality-kit evidence record /tmp/confirm-two-guests.json
+```
+
+`still` screenshots each screen on desktop and phone, optionally marks the
+change (red outline and a caption with actual vs expected) and frames it as a
+browser window or a drawn iPhone. `record` turns a short plan of clicks into a
+video, for changes that are an interaction. Both are made with
+[cutaway](https://github.com/half144/cutaway), pinned inside the kit, and are
+valid only for the current state of the files.
+
+### 6. Commit and ship
 
 `pre-commit` and `pre-push` run the fast profile of the same gate (structure,
 tests next to new files, debt ratchet). This is the guard that also covers
 Codex and humans.
 
-### 5. Pull request (team mode)
+```
+quality-kit ship --dry-run   # preview the title and body
+quality-kit ship             # push and open the PR
+```
+
+The PR body is the tiny plan, then the evidence (uploaded as GitHub
+attachments, never committed), then the checks that passed. `ship` refuses
+without an approved plan, with changed screens and no fresh evidence, or with
+the gate failing.
+
+### 7. Pull request (team mode)
 
 CI runs the full gate on the whole change, pinned to the same kit version.
+
+---
+
+## Skills
+
+| Skill | When |
+| --- | --- |
+| `setup` | once per project: reads it, asks 3 to 5 questions, writes the ruleset |
+| `task` | every request: picks the playbook and lays out the whole flow |
+| `tiny-plan` | before any code: the five-line plan and the stop for your ok |
+| `bug-fix`, `feature`, `refactor`, `perf`, `investigation` | the playbooks |
+| `verify` | runtime proof of changed screens, read by the gate |
+| `evidence` | screenshots and videos for the PR |
+| `ship` | the PR with plan, evidence and gate summary |
+| `map`, `gardener` | keep the screen map and the lint rules fitted to the project |
 
 ---
 
@@ -195,6 +259,7 @@ worse, new code is born clean.
 | Dead code (knip) | unused exports, files, dependencies | ✓ | | ✓ |
 | Duplication (jscpd) | new copy-paste | ✓ | | ✓ |
 | Screen proof (verify) | a changed screen that wasn't opened | ✓ | | |
+| Tiny plan | code changed without a plan you approved | ✓ | | |
 | Ruleset integrity | the rules edited without a human | ✓ | ✓ | ✓ |
 
 ---
@@ -219,6 +284,9 @@ by `setup` and kept current by two skills:
 | --- | --- |
 | `quality-kit gate` | run the checks on what changed (`--profile fast` for the quick set) |
 | `quality-kit verify --changed` | open the affected screens and record the proof |
+| `quality-kit plan write` / `approve` | save the branch's tiny plan; approve it after your ok |
+| `quality-kit evidence still` / `record` | screenshots (framed, optionally marked) and videos for the PR |
+| `quality-kit ship` | open the PR with plan, evidence and gate summary (`--dry-run` to preview) |
 | `quality-kit map` | check the screen map against the real routes |
 | `quality-kit rules status` | is the ruleset the accepted one? |
 
@@ -251,6 +319,9 @@ the next step.
   off, delete the ruleset or accept anything. The agent can't. In team mode,
   protect `.quality/` with CODEOWNERS so rule changes go through review.
 - **JS/TS only for now**, with ESLint flat config (`eslint.config.js/.mjs/.cjs`).
+- **The plan rule lives in Claude Code.** The Stop hook enforces the tiny
+  plan; git hooks and CI never ask for it, because the plan is on your
+  machine. `ship` refuses without it everywhere.
 - **Screens need a way in.** `verify` needs a URL that opens each screen with
   data (a demo route, a seed). Screens without one are listed as unproven.
 
