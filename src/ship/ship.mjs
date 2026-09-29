@@ -1,8 +1,8 @@
 /**
  * `quality-kit ship`: opens the PR with the tiny plan, the evidence and the
- * gate summary. Refuses without an approved plan, with changed screens and no
- * fresh evidence, or with the gate failing. Media goes up as GitHub
- * attachments, never into the repo.
+ * gate summary, or rewrites the branch's open PR. Refuses without an
+ * approved plan, with changed screens and no fresh evidence, or with the gate
+ * failing. Media goes up as GitHub attachments, never into the repo.
  *
  *   quality-kit ship [--dry-run] [--title <text>] [--base <branch>]
  */
@@ -20,7 +20,7 @@ import { languageOf } from '../setup/language.mjs';
 import { normalizeApps, targetKey } from '../verify/apps.mjs';
 import { requiredProof, treeHash } from '../verify/proof.mjs';
 import { prBody, prTitle } from './body.mjs';
-import { createPr, githubToken, pushBranch, repositoryId } from './github.mjs';
+import { githubToken, openPr, publishPr, pushBranch, repositoryId } from './github.mjs';
 import { uploadAll } from './upload.mjs';
 
 export const USAGE = 'Usage: quality-kit ship [--dry-run] [--title <text>] [--base <branch>]';
@@ -82,7 +82,9 @@ export async function runShip(project, config, argv) {
   const bodyFile = join(branch, 'pr-body.md');
   writeFileSync(bodyFile, `${body}\n`);
   pushBranch(project.repo);
-  process.stdout.write(`${createPr(project.repo, { title, bodyFile, base: option(argv, '--base') ?? baseBranch(config.base) })}\n`);
+  const url = openPr(project.repo);
+  const published = publishPr(project.repo, { url, title, bodyFile, base: option(argv, '--base') ?? baseBranch(config.base) });
+  process.stdout.write(`${published}${url ? ' (updated)' : ''}\n`);
   if (failures.length > 0) console.error(`Some media did not upload (${failures.join('; ')}): the PR lists their local paths. Tell the owner.`);
   return 0;
 }

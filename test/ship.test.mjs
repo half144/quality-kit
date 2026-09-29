@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 
 import { prBody, prTitle } from '../src/ship/body.mjs';
+import { prArgs } from '../src/ship/github.mjs';
 import { baseBranch, mediaItems, shipBlockers } from '../src/ship/ship.mjs';
 import { contentTypeOf, uploadAll, uploadAsset, uploadRequest } from '../src/ship/upload.mjs';
 
@@ -80,4 +81,10 @@ test('ship: base branch for gh and the framed still preferred over the raw one',
   assert.equal(baseBranch('develop'), 'develop');
   const items = mediaItems([{ kind: 'still', screen: '/', device: 'phone', caption: null, file: '/raw.png', framed: '/raw.framed.png', tree: 't' }, { kind: 'video', screen: '/', device: 'desktop', caption: null, file: '/v.mp4', framed: null }]);
   assert.deepEqual(items.map((item) => item.path), ['/raw.framed.png', '/v.mp4']);
+});
+
+test('ship opens the PR, or rewrites the open one when it ships again', () => {
+  const pr = { title: 'T', bodyFile: '/tmp/body.md', base: 'main' };
+  assert.deepEqual(prArgs({ ...pr, url: null }), ['pr', 'create', '--title', 'T', '--body-file', '/tmp/body.md', '--base', 'main']);
+  assert.deepEqual(prArgs({ ...pr, url: 'https://github.com/o/r/pull/7' }), ['pr', 'edit', 'https://github.com/o/r/pull/7', '--title', 'T', '--body-file', '/tmp/body.md', '--base', 'main']);
 });
