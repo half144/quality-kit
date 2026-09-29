@@ -1,14 +1,16 @@
 /**
  * `quality-kit install`: once per machine. Installs the kit's dependencies
- * (eslint, typescript-eslint, knip, jscpd, playwright) outside the target
- * project, downloads Playwright's Chromium and points `~/.quality-kit/kit` at
- * this plugin version, which is how the git hooks and Codex find the kit.
+ * (eslint, typescript-eslint, knip, jscpd, playwright, cutaway) outside the
+ * target project, downloads Playwright's Chromium and cutaway's FFmpeg, and
+ * points `~/.quality-kit/kit` at this plugin version, which is how the git
+ * hooks and Codex find the kit.
  */
 
 import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, rmSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { cutawayDoctor } from '../evidence/cutaway.mjs';
 import { ensureDir } from '../project.mjs';
 import { depsRoot, KIT_ROOT, kitHome, runtimeDir } from '../runtime.mjs';
 
@@ -30,9 +32,20 @@ function installDeps() {
   return dir;
 }
 
-export function installKit() {
+/**
+ * `npm ci --ignore-scripts` skips ffmpeg-static's download; rebuilding runs it.
+ * Without network it fails, and an FFmpeg on PATH still serves.
+ */
+function fetchFfmpeg(deps) {
+  if (existsSync(join(deps, 'node_modules', 'ffmpeg-static', 'ffmpeg'))) return;
+  spawnSync('npm', ['rebuild', 'ffmpeg-static', '--foreground-scripts'], { cwd: deps, stdio: 'inherit' });
+}
+
+export async function installKit() {
   const deps = installDeps();
   step(join(deps, 'node_modules', '.bin', 'playwright'), ['install', 'chromium'], deps);
+  fetchFfmpeg(deps);
+  const evidence = await cutawayDoctor();
   const home = ensureDir(kitHome());
   relink(KIT_ROOT, join(home, 'kit'));
   const bin = ensureDir(join(home, 'bin'));
@@ -42,6 +55,7 @@ export function installKit() {
     [
       `Dependencies in ${deps}.`,
       `Kit at ${join(home, 'kit')} -> ${KIT_ROOT}.`,
+      evidence ?? 'Evidence (cutaway): ready for screenshots, framing and video.',
       onPath ? 'The `quality-kit` command is already on PATH.' : `Add ${bin} to PATH to call \`quality-kit\` directly (export PATH="${bin}:$PATH").`,
       '',
     ].join('\n'),

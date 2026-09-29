@@ -1,6 +1,6 @@
 /**
  * Where the kit's dependencies live (eslint, typescript-eslint, knip, jscpd,
- * playwright). They are installed once per machine, never in the target
+ * playwright, cutaway). They are installed once per machine, never in the target
  * project: the plugin's own node_modules comes first (development clone), then
  * the runtime that `quality-kit install` builds in ~/.quality-kit.
  */
@@ -25,9 +25,12 @@ export function runtimeDir(version = kitVersion()) {
   return join(kitHome(), 'runtime', version);
 }
 
+/** One package per generation of the dependency list: a node_modules from an older kit version lacks the newest. */
+const SENTINELS = ['eslint', 'cutaway'];
+
 /** The folder whose node_modules has the dependencies, or null if nobody installed them. */
 export function depsRoot({ candidates = [KIT_ROOT, runtimeDir()], exists = existsSync } = {}) {
-  return candidates.find((dir) => exists(join(dir, 'node_modules', 'eslint', 'package.json'))) ?? null;
+  return candidates.find((dir) => SENTINELS.every((name) => exists(join(dir, 'node_modules', name, 'package.json')))) ?? null;
 }
 
 export class MissingDepsError extends Error {
