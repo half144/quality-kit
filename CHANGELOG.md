@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.1
+
+- cutaway is pinned to its `v0.2.0` release (the first tag with `frame` and
+  the bundled FFmpeg) instead of a bare commit.
+
 ## v0.3.0
 
 The kit now carries the whole delivery: task, tiny plan, the owner's ok, code
