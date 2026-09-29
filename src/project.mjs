@@ -1,11 +1,11 @@
 /**
- * Onde a régua de um projeto mora e em que modo ele está:
+ * Where a project's ruleset lives and which mode it is in:
  *
- * - time: `.quality/` versionado no próprio repo;
- * - local: `~/.quality-kit/projects/<id>/`, fora do repo (nada muda nele).
+ * - team: `.quality/` versioned in the repo itself;
+ * - local: `~/.quality-kit/projects/<id>/`, outside the repo (nothing changes in it).
  *
- * O estado de execução (cache do gate, relatório do verify, marcas de
- * subagente) fica sempre na pasta do git da worktree, que nunca sobe.
+ * Runtime state (gate cache, verify report, subagent marks) always lives in the
+ * worktree's git folder, which is never pushed.
  */
 
 import { createHash } from 'node:crypto';
@@ -17,7 +17,7 @@ import { kitHome } from './runtime.mjs';
 
 export const TEAM_DIR = '.quality';
 
-/** Um id estável por repositório: as worktrees dele dividem a mesma régua local. */
+/** A stable id per repository: its worktrees share the same local ruleset. */
 export function projectId(repo, common = commonGitDir(repo)) {
   const digest = createHash('sha256').update(realpathSync(common)).digest('hex').slice(0, 10);
   return `${basename(repo).replace(/[^a-zA-Z0-9_-]/g, '-')}-${digest}`;
@@ -28,8 +28,8 @@ export function localRulesDir(id) {
 }
 
 /**
- * O projeto do diretório dado. `mode` é null quando o kit ainda não foi
- * montado nele: o hook do plugin, instalado na máquina, não faz nada ali.
+ * The project for the given directory. `mode` is null when the kit is not set
+ * up there yet: the plugin hook, installed per machine, does nothing there.
  */
 export function locateProject(cwd) {
   const repo = repoRoot(cwd);

@@ -1,7 +1,7 @@
 /**
- * Abre uma tela no Chromium do Playwright, espera ela assentar e junta o que
- * reprova (`evaluate.mjs`): erro de console, exceção, resposta de erro e o
- * texto visível. Tira a captura de tela para quem quiser olhar.
+ * Opens a screen in Playwright's Chromium, waits for it to settle and collects
+ * what fails it (`evaluate.mjs`): console errors, exceptions, error responses
+ * and the visible text. Takes a screenshot for anyone who wants to look.
  */
 
 import { loadDep } from '../runtime.mjs';
@@ -10,7 +10,7 @@ const NAVIGATION_TIMEOUT_MS = 45_000;
 const SETTLE_TIMEOUT_MS = 10_000;
 const MAX_SETTLES = 4;
 
-/** iPhone 14 no Chromium: o WebKit do Playwright é outro download. */
+/** iPhone 14 on Chromium: Playwright's WebKit is a separate download. */
 function iphone(devices) {
   const { viewport, screen, userAgent, deviceScaleFactor, isMobile, hasTouch } = devices['iPhone 14'];
   return { viewport, screen, userAgent, deviceScaleFactor, isMobile, hasTouch };
@@ -20,7 +20,7 @@ export function deviceProfiles(devices = loadDep('@playwright/test').devices) {
   return { desktop: { viewport: { width: 1440, height: 900 } }, mobile: iphone(devices) };
 }
 
-/** O estado inicial do navegador que o app pede (ex.: onboarding já feito). */
+/** The initial browser state the app asks for (e.g. onboarding already done). */
 export function contextOptions(profile, app, origin) {
   const localStorage = app.localStorage ?? [];
   const storageState = localStorage.length > 0 ? { cookies: [], origins: [{ origin, localStorage }] } : undefined;

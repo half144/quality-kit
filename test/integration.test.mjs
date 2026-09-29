@@ -1,5 +1,5 @@
-// Ponta a ponta num repo temporário, no modo local: setup, gate reprovando o
-// erro do agente, trava de integridade e o repo intocado.
+// End to end in a temporary repo, in local mode: setup, the gate failing the
+// agent's mistakes, the integrity lock and an untouched repo.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -55,62 +55,62 @@ after(() => {
   rmSync(repo, { recursive: true, force: true });
 });
 
-test('modo local: o setup não muda nada no repo', () => {
+test('local mode: setup changes nothing in the repo', () => {
   assert.equal(git('status', '--porcelain'), '');
   assert.equal(locateProject(repo).mode, 'local');
 });
 
-test('árvore sem mudança passa', async () => {
+test('an unchanged tree passes', async () => {
   assert.deepEqual(await gate(), []);
 });
 
-test('o gate reprova arquivo novo sem teste, any, tipo frouxo e import proibido', async () => {
+test('the gate fails a new file without a test, any, a loose type and a forbidden import', async () => {
   write('src/features/pagamento/utils/juros.ts', "import { total } from '@/features/conta/utils/total';\n\nexport function juros(valor: any, taxa) {\n  return total([valor * taxa]);\n}\n");
   const problems = (await gate()).join('\n\n');
-  assert.match(problems, /Arquitetura[\s\S]*import-direction[\s\S]*feature "pagamento" importando de "conta"/);
-  assert.match(problems, /Arquivo novo com lógica e sem teste ao lado:\n {2}src\/features\/pagamento\/utils\/juros\.ts/);
+  assert.match(problems, /Architecture[\s\S]*import-direction[\s\S]*"pagamento"[\s\S]*"conta"/);
+  assert.match(problems, /New file with logic and no test next to it:\n {2}src\/features\/pagamento\/utils\/juros\.ts/);
   assert.match(problems, /no-explicit-any/);
   assert.match(problems, /TS7006/);
   rmSync(join(repo, 'src/features/pagamento'), { recursive: true });
 });
 
-test('o hook Stop devolve o relatório para o agente', async () => {
+test('the Stop hook hands the report back to the agent', async () => {
   write('src/lib/nova.ts', 'export function nova(): number {\n  return 1;\n}\n');
   const message = await handleHook({ hook_event_name: 'Stop', cwd: repo });
-  assert.match(message, /O quality-kit reprovou a mudança[\s\S]*src\/lib\/nova\.ts/);
+  assert.match(message, /quality-kit failed this change[\s\S]*src\/lib\/nova\.ts/);
   write('src/lib/nova.test.ts', "import { nova } from './nova';\nif (nova() !== 1) throw new Error('nova');\n");
   assert.equal(await handleHook({ hook_event_name: 'Stop', cwd: repo }), null);
   rmSync(join(repo, 'src/lib/nova.ts'));
   rmSync(join(repo, 'src/lib/nova.test.ts'));
 });
 
-test('régua alterada reprova antes de qualquer check', async () => {
+test('a changed ruleset fails before any check', async () => {
   const path = join(locateProject(repo).rulesDir, 'config.json');
   const original = readFileSync(path, 'utf8');
   writeFileSync(path, JSON.stringify({ ...JSON.parse(original), checks: { lint: false } }, null, 2));
   const problems = await gate();
   assert.equal(problems.length, 1);
-  assert.match(problems[0], /A régua foi alterada; mudança de régua é decisão humana: rode `quality-kit rules accept`/);
+  assert.match(problems[0], /The ruleset was changed; ruleset changes are a human decision: run `quality-kit rules accept`/);
   writeFileSync(path, original);
   assert.deepEqual(await gate(), []);
 });
 
-test('suprimir em massa aparece como dívida que cresceu', async () => {
+test('bulk suppression shows up as grown debt', async () => {
   const project = locateProject(repo);
   const path = join(project.rulesDir, 'baseline', 'eslint', 'root.json');
   const original = readFileSync(path, 'utf8');
   writeFileSync(path, JSON.stringify({ 'src/lib/soma.ts': { 'no-console': { count: 3 } } }));
   const [problem] = await gate();
-  assert.match(problem, /A dívida congelada cresceu[\s\S]*eslint:src\/lib\/soma\.ts no-console {2}0 -> 3/);
+  assert.match(problem, /The frozen debt grew[\s\S]*eslint:src\/lib\/soma\.ts no-console {2}0 -> 3/);
   writeFileSync(path, original);
 });
 
-test('o aceite adulterado não passa', async () => {
+test('a tampered acceptance does not pass', async () => {
   const project = locateProject(repo);
   const record = join(home, 'accepted', `${project.id}.json`);
   const original = readFileSync(record, 'utf8');
   writeFileSync(record, JSON.stringify({ ...JSON.parse(original), reguaHash: 'forjado' }));
   const [problem] = await gate();
-  assert.match(problem, /adulterado/);
+  assert.match(problem, /tampered/);
   writeFileSync(record, original);
 });

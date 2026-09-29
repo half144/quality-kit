@@ -1,4 +1,4 @@
 #!/bin/sh
-# O comando `quality-kit`. No Claude Code, a pasta bin/ do plugin entra no PATH
-# do Bash; fora dele, o `quality-kit install` liga ~/.quality-kit/bin a este kit.
+# The `quality-kit` command. In Claude Code, the plugin's bin/ folder is added to
+# the Bash PATH; elsewhere, `quality-kit install` links ~/.quality-kit/bin to this kit.
 exec node "$(dirname "$0")/quality-kit.mjs" "$@"

@@ -1,15 +1,15 @@
 /**
- * O hook Stop/SubagentStop/SubagentStart do Claude Code. O plugin é instalado
- * na máquina, então o hook dispara em todo projeto: onde o kit não foi montado
- * (ou o setup não terminou) ele não faz nada.
+ * The Claude Code Stop/SubagentStop/SubagentStart hook. The plugin is installed
+ * per machine, so the hook fires in every project: where the kit is not set up
+ * (or setup has not finished) it does nothing.
  *
- * Reprovado, sai com código 2 e o relatório no stderr: o Claude Code não deixa
- * o agente parar e devolve o relatório para ele corrigir. Não há saída por
- * `stop_hook_active`: tentar parar de novo sem corrigir é bloqueado de novo, e
- * o próprio Claude Code encerra depois de vários bloqueios seguidos.
+ * On failure it exits with code 2 and the report on stderr: Claude Code keeps
+ * the agent from stopping and hands it the report to fix. There is no escape
+ * via `stop_hook_active`: trying to stop again without fixing is blocked again,
+ * and Claude Code itself ends the session after several blocks in a row.
  *
- * Subagente que não mexeu em nada não responde pela área: o SubagentStart
- * guarda o estado e o SubagentStop só cobra se ele mudou.
+ * A subagent that changed nothing is not held responsible for the area:
+ * SubagentStart records the state and SubagentStop only enforces if it changed.
  */
 
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -45,12 +45,12 @@ function activeProject(cwd) {
     const config = loadConfig(project.rulesDir);
     return config.status === 'active' ? { project, config } : null;
   } catch {
-    // Fora de um repositório git: nada a cobrar.
+    // Outside a git repository: nothing to enforce.
     return null;
   }
 }
 
-/** Processa o evento; devolve a mensagem de bloqueio ou null. */
+/** Handles the event; returns the blocking message or null. */
 export async function handleHook(input) {
   process.env.QUALITY_KIT_HOOK = '1';
   const found = activeProject(input.cwd ?? process.cwd());
@@ -79,7 +79,7 @@ export async function hookMain() {
     if (!message) return 0;
     console.error(message);
   } catch (error) {
-    console.error(`quality-kit: o gate não conseguiu rodar: ${error instanceof Error ? error.message : error}`);
+    console.error(`quality-kit: the gate could not run: ${error instanceof Error ? error.message : error}`);
   }
   return 2;
 }

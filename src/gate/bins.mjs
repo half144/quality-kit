@@ -1,7 +1,7 @@
 /**
- * Qual executável usar. Ferramenta que o projeto já tem instalada (vitest,
- * jest, tsc, eslint no modo `project`) vem do node_modules dele, do workspace
- * para a raiz; o resto vem das dependências do kit.
+ * Which executable to use. Tools the project already has installed (vitest,
+ * jest, tsc, eslint in `project` mode) come from its own node_modules, from the
+ * workspace up to the root; everything else comes from the kit's dependencies.
  */
 
 import { existsSync } from 'node:fs';

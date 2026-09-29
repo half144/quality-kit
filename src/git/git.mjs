@@ -1,4 +1,4 @@
-/** O git como o gate precisa dele: a base, o que a branch mudou e a impressão digital. */
+/** git as the gate needs it: the base, what the branch changed and the fingerprint. */
 
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -14,7 +14,7 @@ export function git(repo, ...args) {
   }).trim();
 }
 
-/** `git show ref:arquivo` byte a byte (sem aparar), ou null se o arquivo não existia naquela ref. */
+/** `git show ref:file` byte for byte (untrimmed), or null if the file did not exist at that ref. */
 export function gitShow(repo, spec) {
   try {
     return execFileSync('git', ['show', spec], { cwd: repo, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] });
@@ -31,26 +31,26 @@ export function repoRoot(cwd) {
   return git(cwd, 'rev-parse', '--show-toplevel');
 }
 
-/** A pasta do git desta worktree: estado local que nunca sobe. */
+/** This worktree's git folder: local state that is never pushed. */
 export function gitDir(repo) {
   return resolve(repo, git(repo, 'rev-parse', '--git-dir'));
 }
 
-/** A pasta comum do git: a mesma para todas as worktrees do repo. */
+/** The common git folder: the same for every worktree of the repo. */
 export function commonGitDir(repo) {
   return resolve(repo, git(repo, 'rev-parse', '--git-common-dir'));
 }
 
-/** O merge-base com a primeira ref de base que existir neste clone. */
+/** The merge base with the first base ref that exists in this clone. */
 export function mergeBase(repo, refs) {
   for (const ref of refs) {
     try {
       return git(repo, 'merge-base', 'HEAD', ref);
     } catch {
-      // Sem essa ref neste clone: tenta a próxima.
+      // This clone lacks that ref: try the next one.
     }
   }
-  throw new Error(`Sem nenhuma ref de base (${refs.join(', ')}) para comparar: rode \`git fetch\`.`);
+  throw new Error(`No base ref (${refs.join(', ')}) to compare against: run \`git fetch\`.`);
 }
 
 export function baseRefs(configured) {
@@ -58,8 +58,8 @@ export function baseRefs(configured) {
 }
 
 /**
- * O que a branch mudou contra a base, inclusive o que não foi commitado.
- * `fingerprint` muda quando qualquer byte da mudança muda.
+ * What the branch changed against the base, including uncommitted work.
+ * `fingerprint` changes whenever any byte of the change changes.
  */
 export function branchChanges(repo, base) {
   const untracked = lines(git(repo, 'ls-files', '--others', '--exclude-standard'));
@@ -74,7 +74,7 @@ export function branchChanges(repo, base) {
   };
 }
 
-/** Os arquivos do repositório como estão no disco: versionados e novos, sem os apagados. */
+/** The repository files as they are on disk: tracked and new, without deleted ones. */
 export function listFiles(repo) {
   return lines(git(repo, 'ls-files', '--cached', '--others', '--exclude-standard')).filter((file) => existsSync(join(repo, file)));
 }

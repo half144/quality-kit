@@ -1,87 +1,99 @@
 ---
 name: setup
-description: Monta o quality-kit num projeto JS/TS existente (Next, Expo, Vite/React, Node, Convex; monorepo ou não). Use quando pedirem "monta o quality-kit", "configura o gate", "setup do quality-kit", "quero travas de qualidade para agentes neste repo", ou na primeira vez que o kit for usado num projeto. Lê o projeto, faz de 3 a 5 perguntas, gera a régua (checker de arquitetura, ARCHITECTURE.md, mapa de telas, config do verify, complemento dos playbooks, regras extras de lint), congela a dívida e entrega um relatório.
+description: Sets up the quality-kit in an existing JS/TS project (Next, Expo, Vite/React, Node, Convex; monorepo or not). Use when asked to "set up the quality-kit", "install the quality gate", "configure the gate", "add quality guards for agents to this repo", "monta o quality-kit", or the first time the kit is used in a project. Reads the project, asks 3 to 5 questions, generates the ruleset (architecture checker, ARCHITECTURE.md, screen map, verify config, playbooks supplement, extra lint rules) in the project's language, freezes the existing debt and reports back.
 ---
 
-# setup: montar o quality-kit num projeto
+# setup: install the quality-kit in a project
 
-O kit monta a escada de confiança: (1) a estrutura impede o erro, (2) análise
-estática, (3) prova em runtime. O núcleo é igual para todo projeto; o que é do
-projeto você gera aqui.
+The kit builds the trust ladder: (1) structure prevents the mistake, (2)
+static analysis, (3) runtime proof. The core is the same for every project;
+what belongs to the project is generated here.
 
-`quality-kit` abaixo é o comando do kit. No Claude Code o plugin já o põe no
-PATH do Bash. No Codex, ou fora do plugin, use `bin/quality-kit` do clone do
-kit; depois do passo 1, `~/.quality-kit/bin/quality-kit` também serve.
+`quality-kit` below is the kit's command. In Claude Code the plugin already
+puts it on the Bash PATH. In Codex, or outside the plugin, use `bin/quality-kit`
+from the kit clone; after step 1, `~/.quality-kit/bin/quality-kit` works too.
 
-## Passos
+## Steps
 
-1. **Instalar as dependências do kit nesta máquina** (uma vez; não toca no
-   projeto): `quality-kit install`.
-2. **Ler o projeto:** `quality-kit detect`. Anote a stack de cada pacote, o
-   gerenciador de pacotes, os testes, os tsconfig, a forma do código
-   (`shape`: pastas do topo, convenção de nomes, barris, `__tests__`), se já há
-   config de lint, knip, jscpd, hooks do git e CI. Confira o que o projeto
-   precisa para rodar (dependências instaladas? se não, instale com o
-   gerenciador dele antes do passo 5).
-3. **Perguntar (de 3 a 5 decisões, numa rodada só).** Use a ferramenta de
-   perguntas quando houver; senão, pergunte em texto. Sugira a resposta que a
-   leitura indicou e siga com ela se a pessoa não tiver preferência:
-   - **Arquitetura:** manter a atual como régua (`keep`: congela a forma de
-     hoje, o que existe passa e o código novo segue) ou sugerir o padrão por
-     features (`suggest`: rotas → features → compartilhado, kebab-case, sem
-     barril, teste ao lado; as violações de hoje vão para a baseline).
-   - **Modo:** `local` (nada muda no repo: régua em `~/.quality-kit/projects/`,
-     hooks em `.git/hooks`) ou `team` (régua commitada em `.quality/`, hooks em
-     `.githooks/`, passo de CI, deny no `.claude/settings.json`, trecho no
-     AGENTS.md).
-   - **O que é tela:** confirme os apps com UI e a pasta de rotas (Next e Expo
-     Router são deduzidos); para Vite/React sem roteamento por arquivo, quais
-     componentes são telas e o caminho de cada uma.
-   - **Como subir o app** para o verify (comando com `{port}`, build antes, env
-     de backend num arquivo fora do repo).
-   - Se couber: a branch de base (`origin/main`?) e o runner do CI (modo time).
-4. **Gerar os rascunhos.** Escreva as respostas num arquivo temporário fora do
-   repo e rode `quality-kit init --answers <arquivo>`. Formato:
+1. **Install the kit's dependencies on this machine** (once; it does not touch
+   the project): `quality-kit install`.
+2. **Read the project:** `quality-kit detect`. Note each package's stack, the
+   package manager, the tests, the tsconfigs, the shape of the code (`shape`:
+   top-level folders, naming convention, barrels, `__tests__`), and whether
+   there is already lint config, knip, jscpd, git hooks and CI. Check what the
+   project needs to run (are dependencies installed? if not, install them with
+   its own package manager before step 5).
+3. **Pick the language of the generated files.** The kit is in English, but
+   what it writes into the project (ARCHITECTURE.md, the screen map,
+   PLAYBOOKS.md, the AGENTS.md snippet, workflow and hook comments) follows the
+   project. Read the README, the existing docs (`AGENTS.md`, `CLAUDE.md`,
+   `docs/`) and recent commit messages: `en` for English, `pt-BR` for
+   Portuguese. If you cannot tell, add it to the questions in step 4.
+4. **Ask (3 to 5 decisions, in a single round).** Use the question tool when
+   there is one; otherwise ask in text. Suggest the answer the reading pointed
+   to and go with it if the person has no preference:
+   - **Architecture:** keep the current one as the ruleset (`keep`: freezes
+     today's shape, what exists passes and new code follows it) or suggest the
+     feature-based pattern (`suggest`: routes → features → shared, kebab-case,
+     no barrels, colocated tests; today's violations go to the baseline).
+   - **Mode:** `local` (nothing changes in the repo: ruleset in
+     `~/.quality-kit/projects/`, hooks in `.git/hooks`) or `team` (ruleset
+     committed in `.quality/`, hooks in `.githooks/`, a CI step, deny list in
+     `.claude/settings.json`, snippet in AGENTS.md).
+   - **What a screen is:** confirm the apps with UI and the routes folder
+     (Next and Expo Router are deduced); for Vite/React without file-based
+     routing, which components are screens and the path of each.
+   - **How to start the app** for verify (command with `{port}`, build first,
+     backend env in a file outside the repo).
+   - If it fits: the base branch (`origin/main`?) and the CI runner (team
+     mode).
+5. **Generate the drafts.** Write the answers to a temporary file outside the
+   repo and run `quality-kit init --answers <file>`. Format:
 
    ```json
    {
      "mode": "local",
+     "language": "en",
      "architecture": "keep",
      "base": "origin/main",
      "lint": "kit",
      "apps": { "root": { "name": "web", "start": { "command": "npx vite --port {port} --strictPort --host 127.0.0.1" } } },
-     "screens": [{ "app": "web", "file": "App.tsx", "route": "/", "open": "/", "summary": "Tela inicial", "features": [] }],
+     "screens": [{ "app": "web", "file": "App.tsx", "route": "/", "open": "/", "summary": "Home screen", "features": [] }],
      "ci": { "runsOn": "ubuntu-latest", "install": { "run": "npm ci" } }
    }
    ```
 
-   `apps` é indexado pela pasta do pacote (`root` para a raiz). `lint`:
-   `kit` (preset do kit por cima da config do projeto) ou `project` (o projeto
-   já tem um preset rígido, como o Flock; aí vale o dele e as supressões dele).
-5. **Revisar os rascunhos** na pasta que o `init` imprimiu (`quality-kit
-   paths`): `config.json` (raízes, camadas, direção dos imports com
-   `imports.forbid`, pastas especiais do framework em `rootFiles`, workspaces e
-   runner de teste, flags do tsc, `verify.apps`), `ARCHITECTURE.md`,
-   `FEATURE_MAP.md` (preencha Resumo, Feature e o caminho de demonstração das
-   rotas dinâmicas), `PLAYBOOKS.md` e `lint-extra.cjs` (regras que o projeto já
-   pede em texto, no CLAUDE.md ou AGENTS.md dele, viram regra aqui). Ajuste até
-   a régua descrever o projeto; o `init` pode rodar de novo.
-6. **Ligar:** `quality-kit finalize`. Ele congela a dívida (lint, tsc estrito,
-   arquitetura), confere se knip e jscpd rodam no projeto (e desliga o que não
-   roda, com o motivo), instala os hooks do git, gera os arquivos do modo time,
-   liga a régua e assina o aceite. Depois disso a régua só muda por
-   `quality-kit rules accept`, que é de humano.
-7. **Medir:** `quality-kit gate` na árvore de agora (deve aprovar: a dívida
-   antiga está congelada) e `quality-kit map`. No modo local, confira que
-   `git status` continua limpo.
+   `language`: `en` or `pt-BR` (step 3); it is saved in the config and also
+   drives the files `finalize` writes. `apps` is keyed by the package folder
+   (`root` for the root). `lint`: `kit` (the kit preset on top of the
+   project's config) or `project` (the project already has a strict preset,
+   like Flock; then its preset and its suppressions apply).
+6. **Review the drafts** in the folder `init` printed (`quality-kit paths`):
+   `config.json` (roots, layers, import direction with `imports.forbid`,
+   framework special folders in `rootFiles`, workspaces and test runner, tsc
+   flags, `verify.apps`), `ARCHITECTURE.md`, `FEATURE_MAP.md` (fill in
+   Summary, Feature and the demo path of dynamic routes), `PLAYBOOKS.md` and
+   `lint-extra.cjs` (rules the project already asks for in prose, in its
+   CLAUDE.md or AGENTS.md, become rules here). Write what you fill in using
+   the same language. Adjust until the ruleset describes the project; `init`
+   can run again.
+7. **Turn it on:** `quality-kit finalize`. It freezes the debt (lint, strict
+   tsc, architecture), checks that knip and jscpd run in the project (and
+   turns off whatever does not, with the reason), installs the git hooks,
+   writes the team mode files, turns the ruleset on and signs the acceptance.
+   From then on the ruleset only changes through `quality-kit rules accept`,
+   which is for humans.
+8. **Measure:** `quality-kit gate` on the current tree (it should pass: the
+   old debt is frozen) and `quality-kit map`. In local mode, check that
+   `git status` is still clean.
 
-## Relatório
+## Report
 
-- Modo, pasta da régua e o que foi gerado (no modo time, os arquivos novos do
-  repo).
-- As decisões e o porquê de cada uma.
-- A dívida congelada: totais do `finalize` (`eslint`, `tsc`, `arch`).
-- Os checks desligados e o motivo; o que falta a pessoa fazer (PATH, `core.hooksPath`
-  nos outros clones, rótulo `regua-aprovada` no GitHub, CODEOWNERS para
-  `.quality/`).
-- O limite: o dono da máquina sempre pode desligar o kit; o agente não.
+- Mode, language, ruleset folder and what was generated (in team mode, the
+  new files in the repo).
+- The decisions and the reason for each.
+- The frozen debt: the `finalize` totals (`eslint`, `tsc`, `arch`).
+- The checks turned off and why; what the person still has to do (PATH,
+  `core.hooksPath` in other clones, the `regua-aprovada` label on GitHub,
+  CODEOWNERS for `.quality/`).
+- The limit: the machine owner can always turn the kit off; the agent cannot.

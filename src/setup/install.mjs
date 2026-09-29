@@ -1,8 +1,8 @@
 /**
- * `quality-kit install`: uma vez por máquina. Instala as dependências do kit
- * (eslint, typescript-eslint, knip, jscpd, playwright) fora do projeto-alvo,
- * baixa o Chromium do Playwright e aponta `~/.quality-kit/kit` para esta
- * versão do plugin, que é por onde os hooks do git e o Codex acham o kit.
+ * `quality-kit install`: once per machine. Installs the kit's dependencies
+ * (eslint, typescript-eslint, knip, jscpd, playwright) outside the target
+ * project, downloads Playwright's Chromium and points `~/.quality-kit/kit` at
+ * this plugin version, which is how the git hooks and Codex find the kit.
  */
 
 import { spawnSync } from 'node:child_process';
@@ -14,7 +14,7 @@ import { depsRoot, KIT_ROOT, kitHome, runtimeDir } from '../runtime.mjs';
 
 function step(command, args, cwd) {
   const { status } = spawnSync(command, args, { cwd, stdio: 'inherit' });
-  if (status !== 0) throw new Error(`${command} ${args.join(' ')} falhou (código ${status}).`);
+  if (status !== 0) throw new Error(`${command} ${args.join(' ')} failed (exit code ${status}).`);
 }
 
 function relink(target, path) {
@@ -40,9 +40,9 @@ export function installKit() {
   const onPath = (process.env.PATH ?? '').split(':').includes(bin);
   process.stdout.write(
     [
-      `Dependências em ${deps}.`,
-      `Kit em ${join(home, 'kit')} -> ${KIT_ROOT}.`,
-      onPath ? 'O comando `quality-kit` já está no PATH.' : `Ponha ${bin} no PATH para chamar \`quality-kit\` direto (export PATH="${bin}:$PATH").`,
+      `Dependencies in ${deps}.`,
+      `Kit at ${join(home, 'kit')} -> ${KIT_ROOT}.`,
+      onPath ? 'The `quality-kit` command is already on PATH.' : `Add ${bin} to PATH to call \`quality-kit\` directly (export PATH="${bin}:$PATH").`,
       '',
     ].join('\n'),
   );

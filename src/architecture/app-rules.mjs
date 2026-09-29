@@ -1,17 +1,17 @@
 /**
- * Regras de um arquivo dentro de uma raiz de código (`src/` de um app ou de
- * um pacote): pastas do topo, arquivos soltos, camadas da feature, pasta de
- * rotas, barril e nomes. Tudo vem da config; a ausência de uma opção desliga
- * a regra.
+ * Rules for a file inside a code root (the `src/` of an app or a package):
+ * top-level folders, stray files, feature layers, the routes folder, barrels
+ * and naming. Everything comes from the config; leaving an option out turns
+ * the rule off.
  */
 
 import { baseName, follows, isComponentFile, isIndex, isTest } from './names.mjs';
 import { checkRouteFile } from './routes.mjs';
 
 /**
- * Onde um caminho abaixo da pasta de features cai: a feature (ou sub-feature)
- * dona e a camada. Pasta dentro da feature que não é camada é sub-feature, e
- * sub-feature só tem camadas.
+ * Where a path under the features folder lands: the owning feature (or
+ * sub-feature) and the layer. A folder inside a feature that is not a layer is
+ * a sub-feature, and a sub-feature only holds layers.
  */
 export function featureLayout(rest, layers) {
   const [feature, second, third] = rest;
@@ -25,8 +25,8 @@ function checkRootFile(root, fileName) {
   if (!root.rootFiles) return [];
   const tested = fileName.replace(/(\.dom)?\.(test|spec)(?=\.)/, '');
   if (root.rootFiles.includes(fileName) || (isTest(fileName) && root.rootFiles.includes(tested))) return [];
-  const allowed = root.rootFiles.length > 0 ? `Só ${root.rootFiles.join(', ')} podem ficar aí.` : 'Nenhum arquivo fica solto aí.';
-  return [['root-files', `arquivo solto na raiz ${root.path}/. ${allowed}`]];
+  const allowed = root.rootFiles.length > 0 ? `Only ${root.rootFiles.join(', ')} may live there.` : 'No file may live loose there.';
+  return [['root-files', `stray file at the root of ${root.path}/. ${allowed}`]];
 }
 
 function namingProblems(root, parts) {
@@ -35,14 +35,14 @@ function namingProblems(root, parts) {
   const problems = [];
   for (const folder of parts.slice(0, -1)) {
     if (folder !== '__tests__' && !folder.startsWith('.') && !follows(naming.folders, folder)) {
-      problems.push(['naming', `pasta "${folder}" fora de ${naming.folders}.`]);
+      problems.push(['naming', `folder "${folder}" does not follow ${naming.folders}.`]);
     }
   }
   const fileName = parts.at(-1);
   const convention = isComponentFile(fileName) ? (naming.components ?? naming.files) : naming.files;
   const exempt = fileName.startsWith('.') || isTest(fileName) || (parts.length === 1 && root.rootFiles?.includes(fileName));
   if (!exempt && !follows(convention, baseName(fileName))) {
-    problems.push(['naming', `arquivo "${fileName}" fora de ${convention}.`]);
+    problems.push(['naming', `file "${fileName}" does not follow ${convention}.`]);
   }
   return problems;
 }
@@ -52,29 +52,29 @@ function featureProblems(root, parts) {
   if (!features || parts[0] !== features.dir) return [];
   const layout = featureLayout(parts.slice(1), features.layers);
   if (layout.layer) return [];
-  return [['feature-folders', `arquivo solto em ${features.dir}/${layout.unit}: ele vai para uma das pastas ${features.layers.join(', ')}.`]];
+  return [['feature-folders', `stray file in ${features.dir}/${layout.unit}: move it into one of the folders ${features.layers.join(', ')}.`]];
 }
 
 function nonRouteProblems(root, relative, parts) {
   return [
-    ...(root.noBarrel && isIndex(relative) ? [['no-barrel', 'index reexportando é proibido: importe direto do arquivo.']] : []),
+    ...(root.noBarrel && isIndex(relative) ? [['no-barrel', 're-exporting index files are not allowed: import straight from the file.']] : []),
     ...namingProblems(root, parts),
     ...featureProblems(root, parts),
   ];
 }
 
 /**
- * Os problemas de um arquivo, como pares [regra, mensagem]. `relative` é o
- * caminho abaixo da raiz; `source()` lê o arquivo quando a regra precisa.
+ * A file's problems, as [rule, message] pairs. `relative` is the path below
+ * the root; `source()` reads the file when a rule needs it.
  */
 export function checkAppFile(root, relative, source) {
   const parts = relative.split('/');
   if (parts.length === 1) return [...checkRootFile(root, relative), ...namingProblems(root, parts)];
   const [top, ...rest] = parts;
   if (root.allowedTop && !root.allowedTop.includes(top)) {
-    return [['top-folders', `pasta "${top}" não existe no padrão. O topo de ${root.path}/ só tem: ${root.allowedTop.join(', ')}.`]];
+    return [['top-folders', `folder "${top}" is not part of the layout. The top of ${root.path}/ only has: ${root.allowedTop.join(', ')}.`]];
   }
-  const colocated = root.testsColocated && parts.includes('__tests__') ? [['tests-colocated', 'teste mora ao lado do arquivo testado (x.ts + x.test.ts), não em __tests__.']] : [];
+  const colocated = root.testsColocated && parts.includes('__tests__') ? [['tests-colocated', 'tests live next to the file under test (x.ts + x.test.ts), not in __tests__.']] : [];
   if (root.routes && top === root.routes.dir) return [...colocated, ...checkRouteFile(root.routes.framework, rest, source)];
   return [...colocated, ...nonRouteProblems(root, relative, parts)];
 }

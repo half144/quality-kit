@@ -1,7 +1,7 @@
 /**
- * Quem importa quem dentro do `src` de um app, lido do texto dos arquivos.
- * Serve para achar as telas de um arquivo compartilhado: sobe pelos
- * importadores até chegar numa feature do mapa ou numa tela.
+ * Who imports whom inside an app's `src`, read from the file text. Used to
+ * find the screens of a shared file: walks up the importers until it reaches a
+ * feature in the map or a screen.
  */
 
 import { readFileSync } from 'node:fs';
@@ -32,7 +32,7 @@ export function importersOf(files, { srcRoot, read }) {
   return importers;
 }
 
-/** Sobe pelos importadores de `file` e devolve os primeiros que `isOwner` reconhece. */
+/** Walks up the importers of `file` and returns the first ones `isOwner` recognizes. */
 export function owningImporters(file, importers, isOwner) {
   const owners = new Set();
   const seen = new Set([file]);

@@ -1,8 +1,8 @@
 /**
- * Lê o projeto para a skill `setup`: gerenciador de pacotes, monorepo, a
- * stack de cada pacote (Next, Expo, Vite/React, Node, Convex), testes,
- * TypeScript, lint, e a forma atual do código (pastas do topo, convenção de
- * nomes, barris, `__tests__`). Só leitura.
+ * Reads the project for the `setup` skill: package manager, monorepo, each
+ * package's stack (Next, Expo, Vite/React, Node, Convex), tests, TypeScript,
+ * lint, and the current shape of the code (top-level folders, naming
+ * convention, barrels, `__tests__`). Read-only.
  */
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
@@ -27,7 +27,7 @@ export function packageManager(exists) {
   return LOCKFILES.find(([file]) => exists(file))?.[1] ?? 'npm';
 }
 
-/** Os padrões de workspace do package.json ou do pnpm-workspace.yaml. */
+/** The workspace patterns from package.json or pnpm-workspace.yaml. */
 export function workspacePatterns(rootPackage, pnpmWorkspace) {
   const fromPackage = Array.isArray(rootPackage?.workspaces) ? rootPackage.workspaces : (rootPackage?.workspaces?.packages ?? []);
   const fromPnpm = [...(pnpmWorkspace ?? '').matchAll(/^\s*-\s*['"]?([^'"\n]+)['"]?\s*$/gm)].map(([, pattern]) => pattern);
@@ -85,7 +85,7 @@ function routesOf(src, stack, has) {
   return null;
 }
 
-/** Abaixo disso o código não tem uma convenção: a régua "manter" não inventa uma. */
+/** Below this the code has no convention: the "keep" ruleset does not invent one. */
 const CONSISTENT = 0.8;
 
 function convention(names) {
@@ -101,7 +101,7 @@ function convention(names) {
   return count / total >= CONSISTENT ? best : 'any';
 }
 
-/** A forma atual do código de uma raiz: o que a régua "manter o que existe" congela. */
+/** The current shape of a root's code: what the "keep what exists" ruleset freezes. */
 export function shapeOf(files, src) {
   const inside = files.filter((file) => file.startsWith(`${src}/`)).map((file) => file.slice(src.length + 1));
   const code = inside.filter((file) => isCode(file) && !isTest(file));

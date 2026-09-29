@@ -1,8 +1,8 @@
-/** A trava de integridade aplicada a um projeto: lê o estado, compara e, se for o caso, reassina. */
+/** The integrity lock applied to a project: reads the state, compares it and re-signs when due. */
 
 import { git } from '../git/git.mjs';
 import { evaluate, isSigned, machineKey, readRecord, REGUA_CHANGED, writeRecord } from '../integrity/integrity.mjs';
-import { parseRenames, renamedKey } from '../integrity/regua.mjs';
+import { parseRenames, renamedKey } from '../integrity/ruleset.mjs';
 import { currentState, stateAt } from '../integrity/state.mjs';
 
 function judge(project, config, { base, ci }) {
@@ -15,15 +15,15 @@ function judge(project, config, { base, ci }) {
 }
 
 /**
- * Os problemas de integridade. No CI, `allowReguaChange` (um rótulo de
- * revisão humana no PR) deixa passar a régua nova; a dívida continua travada.
+ * The integrity problems. In CI, `allowReguaChange` (a human review label on
+ * the PR) lets a new ruleset through; the debt stays locked.
  */
 export function integrityProblems(project, config, options) {
   const { verdict } = judge(project, config, options);
   return verdict.problems.filter((problem) => !(options.allowReguaChange && problem === REGUA_CHANGED));
 }
 
-/** Depois de um gate limpo: a dívida que encolheu vira o novo teto aceito. */
+/** After a clean gate: debt that shrank becomes the new accepted ceiling. */
 export function refreshAcceptance(project, config, options) {
   if (options.ci) return;
   const { current, verdict } = judge(project, config, options);

@@ -1,4 +1,4 @@
-/** `quality-kit map`: o mapa de telas contra as rotas do código; `--write` acrescenta as que faltam. */
+/** `quality-kit map`: the screen map against the routes in the code; `--write` appends the missing ones. */
 
 import { readFileSync, writeFileSync } from 'node:fs';
 
@@ -6,21 +6,25 @@ import { listFiles } from '../git/git.mjs';
 import { normalizeApps } from './apps.mjs';
 import { mapGaps, parseFeatureMap } from './feature-map.mjs';
 import { docPath } from '../config.mjs';
+import { mapRow } from '../setup/docs.mjs';
+import { docText } from '../setup/doc-text.mjs';
+import { mapLanguage } from '../setup/language.mjs';
 
-function missingRow(screen) {
-  const dynamic = /\[/.test(screen.route);
-  return `| \`${screen.file}\` | \`${screen.route}\` | ${dynamic ? 'precisa de dado de demonstração' : `\`${screen.route}\``} |  |  |`;
+function missingRow(screen, needsDemoData) {
+  const open = /\[/.test(screen.route) ? null : screen.route;
+  return mapRow({ ...screen, open, summary: '', features: [] }, needsDemoData);
 }
 
-/** O mapa com as linhas que faltam no fim da tabela de cada app. Puro. */
+/** The map with the missing rows at the end of each app's table, in the map's own language. Pure. */
 export function withMissingRows(markdown, apps, missing) {
+  const { map } = docText(mapLanguage(markdown));
   const lines = markdown.split('\n');
   for (const app of apps) {
-    const rows = missing.filter((screen) => screen.app === app.name).map(missingRow);
+    const rows = missing.filter((screen) => screen.app === app.name).map((screen) => missingRow(screen, map.needsDemoData));
     if (rows.length === 0) continue;
     const header = lines.findIndex((line) => line.toLowerCase().startsWith(`## ${app.name.toLowerCase()}`));
     if (header === -1) {
-      lines.push('', `## ${app.name} (\`${app.src}\`)`, '', '| Arquivo | Rota | Abrir em | Resumo | Feature |', '| --- | --- | --- | --- | --- |', ...rows);
+      lines.push('', `## ${app.name} (\`${app.src}\`)`, '', map.header, '| --- | --- | --- | --- | --- |', ...rows);
       continue;
     }
     let end = header + 1;
@@ -38,9 +42,9 @@ export function mapCommand({ project, config }, argv) {
   const { missing, stale } = mapGaps(apps, parseFeatureMap(markdown, apps), listFiles(project.repo));
   if (argv.includes('--write') && missing.length > 0) writeFileSync(path, withMissingRows(markdown, apps, missing));
   const lines = [
-    `Mapa: ${path}`,
-    ...missing.map((screen) => `  sem linha: ${screen.app} ${screen.file} (${screen.route})${argv.includes('--write') ? ' -> acrescentada' : ''}`),
-    ...stale.map((screen) => `  linha sem tela: ${screen.app} ${screen.file}`),
+    `Map: ${path}`,
+    ...missing.map((screen) => `  no row: ${screen.app} ${screen.file} (${screen.route})${argv.includes('--write') ? ' -> appended' : ''}`),
+    ...stale.map((screen) => `  row with no screen: ${screen.app} ${screen.file}`),
   ];
   process.stdout.write(`${lines.join('\n')}\n`);
   return stale.length > 0 || (missing.length > 0 && !argv.includes('--write')) ? 1 : 0;

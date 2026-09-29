@@ -1,8 +1,8 @@
 /**
- * Congela a dívida de quando a régua entra: as violações de lint (arquivo de
- * supressões), os erros do tsc estrito e as violações de arquitetura. Daqui
- * para a frente ela só encolhe. Só roda no setup e no `quality-kit baseline`,
- * que é decisão humana.
+ * Freezes the debt that exists when the ruleset is adopted: lint violations
+ * (suppressions file), strict tsc errors and architecture violations. From
+ * then on it can only shrink. Runs only during setup and in
+ * `quality-kit baseline`, which is a human decision.
  */
 
 import { rmSync, writeFileSync } from 'node:fs';
@@ -21,9 +21,9 @@ function writeJson(path, value) {
   writeFileSync(path, `${JSON.stringify(value, null, 2)}\n`);
 }
 
-/** O lint do workspace inteiro com --suppress-all: a dívida de hoje vai para o arquivo. */
+/** Lints the whole workspace with --suppress-all: today's debt goes into the file. */
 async function freezeLint(project, config, workspace) {
-  if (workspace.lint !== 'kit') return { workspace: workspace.dir, skipped: 'lint do próprio projeto: a dívida dele continua no arquivo de supressões dele' };
+  if (workspace.lint !== 'kit') return { workspace: workspace.dir, skipped: "the project's own lint: its debt stays in its own suppressions file" };
   rmSync(suppressionsPath(project, workspace), { force: true });
   const { bin, args, cwd } = lintInvocation({ project, config, workspace, files: ['.'], extra: ['--suppress-all'] });
   const { status, output } = await run(bin, args.filter((arg) => arg !== '--prune-suppressions'), { cwd });

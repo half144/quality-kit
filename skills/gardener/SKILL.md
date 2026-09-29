@@ -1,43 +1,43 @@
 ---
 name: gardener
-description: Jardineiro da régua do quality-kit. Use quando um anti-padrão aparece pela segunda vez (o mesmo erro corrigido de novo, o segundo jeito de fazer a mesma coisa, um review que repete o mesmo comentário), ou quando pedirem "vira regra", "trava isso no lint", "não deixa isso voltar", "um jeito só". Transforma o anti-padrão numa regra mecânica (lint, checker ou teste) com a mensagem que ensina o jeito certo, corrige o código que já existe e entrega a mudança de régua para um humano aceitar.
+description: quality-kit ruleset gardener. Use when an anti-pattern shows up for the second time (the same mistake fixed again, a second way of doing the same thing, a review repeating the same comment), or when asked to "make it a rule", "enforce this in lint", "don't let this come back", "one way only" ("vira regra", "trava isso no lint"). Turns the anti-pattern into a mechanical rule (lint, checker or test) with a message that teaches the right way, fixes the existing code and hands the ruleset change to a human to accept.
 ---
 
-# gardener: o anti-padrão vira regra
+# gardener: the anti-pattern becomes a rule
 
-Regra escrita em texto se esquece; regra mecânica não. O jardineiro poda o
-segundo jeito antes de outro agente copiar.
+A rule written in prose gets forgotten; a mechanical rule does not. The gardener
+prunes the second way before another agent copies it.
 
-1. **Nomear o anti-padrão e o jeito certo**, com os exemplos reais
-   (`arquivo:linha`) e o motivo (o incidente, o bug, o review).
-2. **Escolher o degrau mais baixo que pega:**
-   - **Estrutura** (pasta, camada, direção de import): `architecture` na
-     config da régua, por exemplo `imports.forbid` com `from`, `to` e a
-     mensagem.
-   - **Sintaxe** (chamada, literal, import): `lint-extra.cjs` da régua, em
-     `restrictedSyntax` (seletor do `no-restricted-syntax` com a mensagem) ou
-     em `configs` (ex.: `no-restricted-imports` com `importNames`).
-   - **Comportamento** que o lint não vê: um teste.
-3. **Escrever a mensagem que ensina:** o que fazer em vez disso e onde está o
-   jeito certo ("importe X de Y", "use o hook Z").
-4. **Corrigir o código existente** para o jeito certo, no mesmo PR. Se forem
-   muitos casos, a baseline congela os antigos e o código novo já nasce certo;
-   diga quantos ficaram.
-5. **Provar a regra:** um caso que ela reprova e o código corrigido que ela
-   aprova (rode `quality-kit gate` e mostre as duas saídas).
-6. **Entregar a mudança de régua a um humano.** Mudar a régua é decisão
-   humana: o gate reprova "a régua foi alterada" até alguém rodar
-   `quality-kit rules accept` num terminal.
-   - **Modo local:** edite os arquivos da régua (`quality-kit paths`) e diga à
-     pessoa para revisar e rodar `quality-kit rules accept`.
-   - **Modo time:** o `.claude/settings.json` nega a edição da régua ao agente.
-     Grave a mudança como patch (`git diff` do que você escreveria) num arquivo
-     fora do repo, e diga à pessoa para aplicar, revisar e aceitar. No PR, a
-     régua nova precisa do rótulo `regua-aprovada`.
+1. **Name the anti-pattern and the right way**, with the real examples
+   (`file:line`) and the reason (the incident, the bug, the review).
+2. **Pick the lowest step that catches it:**
+   - **Structure** (folder, layer, import direction): `architecture` in the
+     ruleset config, for example `imports.forbid` with `from`, `to` and the
+     message.
+   - **Syntax** (call, literal, import): the ruleset's `lint-extra.cjs`, in
+     `restrictedSyntax` (a `no-restricted-syntax` selector with the message) or
+     in `configs` (e.g. `no-restricted-imports` with `importNames`).
+   - **Behavior** that lint can't see: a test.
+3. **Write a message that teaches:** what to do instead and where the right way
+   lives ("import X from Y", "use the Z hook").
+4. **Fix the existing code** to the right way, in the same PR. If there are many
+   cases, the baseline freezes the old ones and new code is born correct;
+   say how many were left.
+5. **Prove the rule:** a case it rejects and the fixed code it accepts (run
+   `quality-kit gate` and show both outputs).
+6. **Hand the ruleset change to a human.** Changing the ruleset is a human
+   decision: the gate fails with "the ruleset was changed" until someone runs
+   `quality-kit rules accept` in a terminal.
+   - **Local mode:** edit the ruleset files (`quality-kit paths`) and tell the
+     person to review and run `quality-kit rules accept`.
+   - **Team mode:** `.claude/settings.json` denies the agent edits to the
+     ruleset. Save the change as a patch (`git diff` of what you would write) in
+     a file outside the repo, and tell the person to apply, review and accept
+     it. In the PR, the new ruleset needs the `regua-aprovada` label.
 
-## Resposta
+## Response
 
-- O anti-padrão, o jeito certo e a regra escolhida (degrau e arquivo).
-- As duas saídas do passo 5.
-- O código corrigido e o que ficou congelado na baseline.
-- O comando que o humano roda para aceitar.
+- The anti-pattern, the right way and the chosen rule (step and file).
+- Both outputs from step 5.
+- The fixed code and what was left frozen in the baseline.
+- The command the human runs to accept.

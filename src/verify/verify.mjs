@@ -1,8 +1,9 @@
 /**
- * `quality-kit verify`: prova na tela. Sobe cada app com o comando da régua,
- * abre cada tela em desktop e celular (iPhone 14) e reprova erro de console,
- * exceção, erro de hidratação, 4xx/5xx de asset próprio e tela sem texto.
- * Grava o relatório na pasta de estado (dentro de `.git`), que o gate confere.
+ * `quality-kit verify`: on-screen proof. Starts each app with the ruleset's
+ * command, opens each screen on desktop and mobile (iPhone 14) and fails on
+ * console errors, exceptions, hydration errors, 4xx/5xx on the site's own
+ * assets and screens with no text. Writes the report to the state folder
+ * (inside `.git`), which the gate checks.
  *
  *   quality-kit verify /conta web:/painel
  *   quality-kit verify --changed
@@ -27,7 +28,7 @@ const FLAGS = new Set(['--changed', '--all']);
 export function parseArgs(apps, argv) {
   const targets = argv.filter((arg) => !FLAGS.has(arg)).map((arg) => parseTarget(apps, arg));
   const flags = { changed: argv.includes('--changed'), all: argv.includes('--all') };
-  if (!flags.changed && !flags.all && targets.length === 0) throw new Error('Uso: quality-kit verify <caminho>... | --changed | --all   (ex.: /conta web:/painel)');
+  if (!flags.changed && !flags.all && targets.length === 0) throw new Error('Usage: quality-kit verify <path>... | --changed | --all   (e.g. /conta web:/painel)');
   return { ...flags, targets };
 }
 
@@ -36,7 +37,7 @@ export function screenshotName({ app, path, device }) {
   return `${app}-${slug}-${device}.png`;
 }
 
-/** Aprovado só se toda tela passou e a árvore não mudou no meio. */
+/** Passes only if every screen passed and the tree did not change midway. */
 export function buildReport({ tree, treeAfter, date, requested, results }) {
   const drifted = tree !== treeAfter;
   return {
@@ -44,7 +45,7 @@ export function buildReport({ tree, treeAfter, date, requested, results }) {
     tree,
     date,
     requested,
-    drift: drifted ? `Os arquivos mudaram durante o verify (árvore ${tree} virou ${treeAfter}): rode de novo.` : null,
+    drift: drifted ? `The files changed while verify was running (tree ${tree} became ${treeAfter}): run it again.` : null,
     results,
   };
 }
@@ -73,7 +74,7 @@ async function checkTarget({ browser, servers, shots, apps, target }) {
 }
 
 function printResult(apps, result) {
-  process.stdout.write(`${result.ok ? 'ok ' : 'FALHOU'} ${targetKey(apps, result)} (${result.device})\n`);
+  process.stdout.write(`${result.ok ? 'ok    ' : 'FAILED'} ${targetKey(apps, result)} (${result.device})\n`);
   for (const { kind, detail } of result.problems) process.stdout.write(`    ${kind}: ${detail.split('\n')[0]}\n`);
 }
 
@@ -100,17 +101,17 @@ async function runChecks(project, apps, dir, targets) {
 
 export async function runVerify(project, config, argv) {
   const apps = normalizeApps(config.verify);
-  if (apps.length === 0) throw new Error('A régua não tem `verify.apps`: rode a skill `setup` (ou `map`) para dizer como subir o app.');
+  if (apps.length === 0) throw new Error('The ruleset has no `verify.apps`: run the `setup` skill (or `map`) to say how to start the app.');
   const args = parseArgs(apps, argv);
   const tree = treeHash(project.repo);
   const targets = requestedTargets(project, config, apps, args);
-  if (targets.length === 0) process.stdout.write('Nenhuma tela com prova afetada pela mudança (mapa de telas).\n');
+  if (targets.length === 0) process.stdout.write('No screen that takes proof is affected by the change (screen map).\n');
   const path = reportPath(project);
   const dir = ensureDir(dirname(path));
   const results = targets.length === 0 ? [] : await runChecks(project, apps, dir, targets);
   const report = buildReport({ tree, treeAfter: treeHash(project.repo), date: new Date().toISOString(), requested: targets, results });
   writeFileSync(path, `${JSON.stringify(report, null, 2)}\n`);
   if (report.drift) console.error(report.drift);
-  process.stdout.write(`${report.ok ? 'Aprovado' : 'Reprovado'}: ${results.length} aberturas em ${targets.length} telas. Relatório em ${path}, capturas em ${join(dir, 'shots')}.\n`);
+  process.stdout.write(`${report.ok ? 'Passed' : 'Failed'}: ${results.length} page loads across ${targets.length} screens. Report at ${path}, screenshots in ${join(dir, 'shots')}.\n`);
   return report.ok;
 }

@@ -1,8 +1,9 @@
 /**
- * A config da régua a partir do que o `detect` leu e das respostas da skill
- * `setup`. "Manter" congela a forma que o código já tem (o que existe passa,
- * e a dívida fica na baseline); "sugerir" propõe o padrão por features (as
- * violações de hoje também vão para a baseline, e o código novo nasce nele).
+ * The ruleset config, built from what `detect` read and the answers to the
+ * `setup` skill. "Keep" freezes the shape the code already has (what exists
+ * passes, and the debt goes into the baseline); "suggest" proposes the
+ * feature-based layout (today's violations also go into the baseline, and new
+ * code is born in it).
  */
 
 import { DEFAULT_TS_FLAGS } from '../config.mjs';
@@ -101,7 +102,7 @@ function protectedGlobs(mode) {
   return mode === 'team' ? [...lint, '.githooks/**', '.github/workflows/quality.yml', '.claude/settings.json'] : lint;
 }
 
-/** Na régua "manter", o projeto que guarda teste em `__tests__` continua podendo. */
+/** Under the "keep" ruleset, a project that keeps tests in `__tests__` may go on doing so. */
 function testDirsOf(packages, style) {
   const folders = packages.filter((pkg) => pkg.shape?.testsInFolder > 0);
   if (style === 'suggest' || folders.length === 0) return ['{dir}'];

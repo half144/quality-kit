@@ -1,35 +1,36 @@
 ---
 name: map
-description: Mantém o mapa de telas do quality-kit (FEATURE_MAP.md da régua) e o checker de arquitetura em dia com o código. Use quando criar, mover ou apagar uma tela ou rota, quando o gate cobrar "Tela sem linha no mapa", quando o verify não souber abrir uma tela, ou quando pedirem "atualiza o mapa de telas", "mapeia as rotas". Acrescenta as rotas que faltam, preenche o caminho de demonstração e as features de cada tela, e aponta o que mudou na estrutura e precisa virar régua.
+description: Keeps the quality-kit screen map (the ruleset's FEATURE_MAP.md) and the architecture checker in sync with the code. Use when you create, move or delete a screen or route, when the gate reports "Screen with no row in the screen map", when verify doesn't know how to open a screen, or when asked to "update the screen map", "map the routes" ("atualiza o mapa de telas"). Adds the missing routes, fills in the demo path and the features of each screen, and points out what changed in the structure and needs to become a rule.
 ---
 
-# map: o mapa de telas e o checker
+# map: the screen map and the checker
 
-O mapa diz ao verify o que abrir e ao gate que telas uma mudança afeta. O
-checker diz onde cada coisa mora. Os dois ficam para trás quando o código anda.
+The map tells verify what to open and tells the gate which screens a change
+affects. The checker says where each thing lives. Both fall behind as the code
+moves.
 
-1. **Conferir:** `quality-kit map`. Ele lista a rota sem linha no mapa e a
-   linha sem rota (nos apps com roteamento por arquivo, Next e Expo Router).
-2. **Acrescentar o que falta:** `quality-kit map --write` põe as linhas das
-   rotas novas no fim da tabela do app. Depois preencha à mão, no
-   `FEATURE_MAP.md` da régua (`quality-kit paths`):
-   - **Abrir em:** um caminho que abre com dado de demonstração. Rota dinâmica
-     (`/evento/[id]`) precisa de um id que exista no ambiente do verify; sem
-     isso, escreva o motivo no lugar do caminho.
-   - **Feature:** as pastas (relativas ao `src`) que alimentam a tela, para o
-     `verify --changed` achar a tela quando elas mudam.
-   - **Resumo:** o que a tela é, em poucas palavras.
-3. **Linha sem rota:** a tela saiu ou mudou de lugar. Apague a linha ou corrija
-   o arquivo.
-4. **App sem roteamento por arquivo** (Vite/React Router): as telas são linhas
-   escritas à mão, com o componente da tela em **Arquivo** (relativo ao `src`).
-   Tela nova é linha nova.
-5. **Estrutura que mudou:** se a mudança criou uma pasta de topo, uma camada
-   ou uma convenção nova que o checker reprova, isso não é para contornar: é
-   uma decisão de régua. Descreva a mudança proposta na config
-   (`architecture.roots`) e deixe para um humano aplicar e aceitar
-   (`quality-kit rules accept`), como na skill `gardener`.
-6. **Provar:** `quality-kit verify --changed` abre as telas novas.
+1. **Check:** `quality-kit map`. It lists routes with no row in the map and
+   rows with no route (in apps with file-based routing, Next and Expo Router).
+2. **Add what is missing:** `quality-kit map --write` appends rows for the new
+   routes at the end of the app's table. Then fill them in by hand, in the
+   ruleset's `FEATURE_MAP.md` (`quality-kit paths`):
+   - **Open at:** a path that opens with demo data. A dynamic route
+     (`/evento/[id]`) needs an id that exists in the verify environment; without
+     one, write the reason in place of the path.
+   - **Feature:** the folders (relative to `src`) that feed the screen, so
+     `verify --changed` finds the screen when they change.
+   - **Summary:** what the screen is, in a few words.
+3. **Row with no route:** the screen was removed or moved. Delete the row or fix
+   the file.
+4. **App without file-based routing** (Vite/React Router): screens are rows
+   written by hand, with the screen component in **File** (relative to `src`).
+   A new screen is a new row.
+5. **Structure that changed:** if the change created a top-level folder, a layer
+   or a new convention that the checker rejects, don't work around it: it is a
+   ruleset decision. Describe the proposed change in the config
+   (`architecture.roots`) and leave it for a human to apply and accept
+   (`quality-kit rules accept`), as in the `gardener` skill.
+6. **Prove it:** `quality-kit verify --changed` opens the new screens.
 
-O mapa não é régua: editar o `FEATURE_MAP.md` não pede aceite. O gate só
-reprova a tela nova sem linha.
+The map is not part of the ruleset: editing `FEATURE_MAP.md` needs no
+acceptance. The gate only fails a new screen with no row.

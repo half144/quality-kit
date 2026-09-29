@@ -1,14 +1,15 @@
 /**
- * O que reprova uma tela aberta no navegador. Recebe o que a página deixou
- * (console, exceções, respostas, texto) e devolve os problemas, cada um com o
- * tipo e o detalhe. Lista vazia é tela aprovada.
+ * What fails a screen opened in the browser. Takes what the page left behind
+ * (console, exceptions, responses, text) and returns the problems, each with a
+ * kind and a detail. An empty list means the screen passed.
  */
 
 const HYDRATION = /hydrat|did not match|server rendered HTML|Minified React error #(418|423|425)\b/i;
 
 /**
- * O navegador loga todo recurso que falhou como erro de console. O de fora
- * (analytics, pixel) não é da tela; o próprio já reprova pela resposta.
+ * The browser logs every failed resource as a console error. Third-party ones
+ * (analytics, pixel) are not the screen's problem; the site's own already fail
+ * through the response.
  */
 const FAILED_RESOURCE = /^Failed to load resource\b/;
 
@@ -23,11 +24,11 @@ function isOwnAsset(url, origin) {
 function consoleProblems(consoleErrors) {
   return consoleErrors
     .filter(({ text }) => !FAILED_RESOURCE.test(text))
-    .map(({ text }) => problem(HYDRATION.test(text) ? 'hidratação' : 'console', text));
+    .map(({ text }) => problem(HYDRATION.test(text) ? 'hydration' : 'console', text));
 }
 
 function pageErrorProblems(pageErrors) {
-  return pageErrors.map((message) => problem(HYDRATION.test(message) ? 'hidratação' : 'exceção', message));
+  return pageErrors.map((message) => problem(HYDRATION.test(message) ? 'hydration' : 'exception', message));
 }
 
 function responseProblems(responses, origin) {
@@ -39,8 +40,8 @@ function responseProblems(responses, origin) {
  *   responses: { url: string, status: number }[], text: string, navigationError?: string | null }} page
  */
 export function evaluatePage(page) {
-  if (page.navigationError) return [problem('navegação', page.navigationError)];
+  if (page.navigationError) return [problem('navigation', page.navigationError)];
   const problems = [...pageErrorProblems(page.pageErrors), ...consoleProblems(page.consoleErrors), ...responseProblems(page.responses, page.origin)];
-  if (page.text.trim() === '') problems.push(problem('texto vazio', 'a página abriu sem nenhum texto visível'));
+  if (page.text.trim() === '') problems.push(problem('empty text', 'the page opened with no visible text'));
   return problems;
 }

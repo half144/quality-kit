@@ -1,8 +1,8 @@
 /**
- * Servidor de SPA para o verify (`quality-kit serve <pasta> --port <n>`): o
- * export estático de um app (ex.: `expo export -p web`). Arquivo que existe
- * sai como está; caminho de rota (sem extensão) recebe o `index.html`; arquivo
- * que não existe é 404, para o verify pegar o asset quebrado.
+ * SPA server for verify (`quality-kit serve <folder> --port <n>`): an app's
+ * static export (e.g. `expo export -p web`). A file that exists is served as
+ * is; a route path (no extension) gets `index.html`; a missing file is a 404,
+ * so verify catches the broken asset.
  */
 
 import { createReadStream, existsSync, statSync } from 'node:fs';
@@ -37,9 +37,9 @@ function isFile(path) {
   return existsSync(path) && statSync(path).isFile();
 }
 
-/** O arquivo que responde a um caminho da URL, ou null (404). */
+/** The file that answers a URL path, or null (404). */
 export function fileFor(root, urlPath) {
-  // O caminho da URL é absoluto: o normalize não o deixa subir acima de `/`.
+  // The URL path is absolute: normalize will not let it climb above `/`.
   const relative = normalize(decodeURIComponent(urlPath.split('?')[0] ?? '/'));
   const candidate = join(root, relative);
   if (isFile(candidate)) return candidate;

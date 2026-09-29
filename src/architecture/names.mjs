@@ -1,4 +1,4 @@
-/** Nomes de arquivo e de pasta: o que conta como teste, código e cada convenção. */
+/** File and folder names: what counts as a test, as code, and each naming convention. */
 
 import path from 'node:path';
 
@@ -8,16 +8,16 @@ const CONVENTIONS = {
   pascal: /^[A-Z][a-zA-Z0-9]*$/,
 };
 
-/** Casa com a convenção? `any` (ou ausente) aceita tudo. */
+/** Does the name follow the convention? `any` (or none) accepts everything. */
 export function follows(convention, name) {
   const pattern = CONVENTIONS[convention];
   return !pattern || pattern.test(name);
 }
 
 /**
- * Nome sem a extensão e sem os sufixos de convenção: `.test`, `.spec`,
- * `.dom.test`, plataforma (`.web`, `.native`...), `.styles`, `.module`, `.d`
- * e a densidade de imagem (`@2x`).
+ * The name without the extension and the conventional suffixes: `.test`,
+ * `.spec`, `.dom.test`, platform (`.web`, `.native`...), `.styles`, `.module`,
+ * `.d` and the image density (`@2x`).
  */
 export function baseName(file) {
   return path.posix

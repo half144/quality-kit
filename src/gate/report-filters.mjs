@@ -1,4 +1,4 @@
-/** Os relatórios JSON do knip e do jscpd, recortados para o que a branch trouxe. */
+/** The knip and jscpd JSON reports, narrowed to what the branch introduced. */
 
 import { relative } from 'node:path';
 
@@ -19,7 +19,7 @@ const KNIP_TYPES = [
   'duplicates',
 ];
 
-/** Export duplicado vem como grupo: os nomes que apontam para a mesma coisa. */
+/** A duplicate export comes as a group: the names that point to the same thing. */
 function itemName(item) {
   return Array.isArray(item) ? item.map((alias) => alias.name).join(' = ') : item.name;
 }
@@ -27,8 +27,8 @@ function itemName(item) {
 const DEPENDENCY_TYPES = new Set(['dependencies', 'devDependencies', 'optionalPeerDependencies']);
 
 /**
- * No package.json, a pendência de dependência só conta para o que a branch
- * acrescentou: quem declara um pacote não herda a limpeza das outras.
+ * In package.json, a dependency issue only counts for what the branch added:
+ * whoever declares a package does not inherit the cleanup of the others.
  */
 function itemsOf(issue, type, addedDependencies) {
   const items = issue[type] ?? [];
@@ -38,8 +38,8 @@ function itemsOf(issue, type, addedDependencies) {
 }
 
 /**
- * As pendências do knip nos arquivos dados, uma linha por arquivo e tipo.
- * `addedDependencies` diz, por package.json, os pacotes que a branch declarou.
+ * The knip issues in the given files, one line per file and type.
+ * `addedDependencies` maps each package.json to the packages the branch declared.
  */
 export function knipIssuesIn(report, files, addedDependencies = new Map()) {
   const touched = new Set(files);
@@ -54,14 +54,14 @@ export function knipIssuesIn(report, files, addedDependencies = new Map()) {
 
 const DEPENDENCY_FIELDS = ['dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies'];
 
-/** Os pacotes declarados em `after` que `before` não tinha (package.json da base e o de agora). */
+/** Packages declared in `after` that `before` did not have (the base package.json and the current one). */
 export function addedPackages(before, after) {
   const names = (manifest) => new Set(DEPENDENCY_FIELDS.flatMap((field) => Object.keys(manifest[field] ?? {})));
   const old = names(before);
   return new Set([...names(after)].filter((name) => !old.has(name)));
 }
 
-/** Os clones que a base não tinha (`--baseline-from-ref`), com o caminho relativo ao repo. */
+/** Clones the base did not have (`--baseline-from-ref`), with paths relative to the repo. */
 export function newClones(report, repo) {
   const place = (file) => `${relative(repo, file.name)}:${file.start}-${file.end}`;
   return report.duplicates.filter((clone) => clone.isNew).map((clone) => `${place(clone.firstFile)} ~ ${place(clone.secondFile)}`);

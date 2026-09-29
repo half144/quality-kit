@@ -1,8 +1,9 @@
 /**
- * Sobe o app que o verify abre, com o comando da régua (`verify.apps[].start`):
- * `{port}` vira uma porta livre pedida ao sistema. O `build`, se houver, roda
- * antes. O env vem de `env` e de um arquivo (`envFile`, com `~`), para apontar
- * para um backend de verdade sem pôr segredo na régua.
+ * Starts the app verify opens, with the ruleset's command
+ * (`verify.apps[].start`): `{port}` becomes a free port requested from the OS.
+ * The `build`, if any, runs first. The env comes from `env` and from a file
+ * (`envFile`, `~` allowed), so it can point at a real backend without putting
+ * secrets in the ruleset.
  */
 
 import { spawn } from 'node:child_process';
@@ -28,7 +29,7 @@ export function expandHome(path) {
 
 export function appEnv(start) {
   const file = start.envFile ? expandHome(start.envFile) : null;
-  if (file && !existsSync(file)) throw new Error(`O verify pede o env ${file}, que não existe nesta máquina.`);
+  if (file && !existsSync(file)) throw new Error(`verify needs the env file ${file}, which does not exist on this machine.`);
   const fromFile = file ? parseEnv(readFileSync(file, 'utf8')) : {};
   const picked = start.envKeys ? Object.fromEntries(start.envKeys.map((key) => [key, fromFile[key]])) : fromFile;
   return { ...picked, ...start.env };
@@ -67,15 +68,15 @@ function finished(child) {
 async function waitForHttp(url, child, timeout) {
   const deadline = Date.now() + timeout;
   while (Date.now() < deadline) {
-    if (child.exitCode !== null) throw new Error(`O servidor de ${url} saiu com ${child.exitCode}.`);
+    if (child.exitCode !== null) throw new Error(`The server for ${url} exited with ${child.exitCode}.`);
     const ready = await fetch(url, { redirect: 'manual' }).then(() => true, () => false);
     if (ready) return;
     await new Promise((resume) => setTimeout(resume, 500));
   }
-  throw new Error(`${url} não respondeu em ${timeout / 1000} s.`);
+  throw new Error(`${url} did not respond within ${timeout / 1000} s.`);
 }
 
-/** Mata o grupo inteiro: `npm run dev` deixa o servidor de verdade como neto. */
+/** Kills the whole process group: `npm run dev` leaves the real server as a grandchild. */
 function stopGroup(child) {
   try {
     process.kill(-child.pid, 'SIGTERM');
@@ -89,7 +90,7 @@ export async function startApp({ repo, dir, app }) {
   const env = appEnv(app.start);
   if (app.start.build) {
     const status = await finished(shell(app.start.build, { cwd, env, log: join(dir, `${app.name}-build.log`) }));
-    if (status !== 0) throw new Error(`O build de ${app.name} falhou; veja ${join(dir, `${app.name}-build.log`)}.`);
+    if (status !== 0) throw new Error(`The build for ${app.name} failed; see ${join(dir, `${app.name}-build.log`)}.`);
   }
   const port = await freePort();
   const child = shell(withPort(app.start.command, port), { cwd, env: { ...env, PORT: String(port) }, log: join(dir, `${app.name}-server.log`) });

@@ -1,4 +1,4 @@
-/** `quality-kit git-hook <pre-commit|pre-push>`: o gate no perfil que a régua escolheu para cada hook. */
+/** `quality-kit git-hook <pre-commit|pre-push>`: the gate with the profile the ruleset picked for each hook. */
 
 import { loadConfig } from '../config.mjs';
 import { report, runGate } from '../gate/gate.mjs';
@@ -13,7 +13,7 @@ async function readStdin() {
   return text;
 }
 
-/** O push vai direto para uma branch protegida? `lines` é o stdin do pre-push. */
+/** Does the push go straight to a protected branch? `lines` is the pre-push stdin. */
 export function protectedPush(lines, branches) {
   return lines
     .split('\n')
@@ -30,7 +30,7 @@ export async function gitHook(name) {
   if (name === 'pre-push' && config.hooks.protectBranches?.length) {
     const ref = protectedPush(await readStdin(), config.hooks.protectBranches);
     if (ref) {
-      console.error(`Push direto em ${ref} bloqueado: crie uma branch e abra um PR.`);
+      console.error(`Direct push to ${ref} blocked: create a branch and open a PR.`);
       return 1;
     }
   }

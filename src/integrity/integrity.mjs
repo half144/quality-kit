@@ -1,11 +1,12 @@
 /**
- * A trava de integridade. O gate guarda, assinado com uma chave desta máquina,
- * o hash da régua e a dívida congelada que um humano aceitou. Régua diferente
- * da aceita reprova; dívida maior que a aceita reprova. Só `quality-kit rules
- * accept`, num terminal de verdade e fora de agente, assina um estado novo.
+ * The integrity lock. The gate stores, signed with a key from this machine,
+ * the ruleset hash and the frozen debt a human accepted. A ruleset different
+ * from the accepted one fails; debt larger than the accepted one fails. Only
+ * `quality-kit rules accept`, at a real terminal and outside an agent, signs a
+ * new state.
  *
- * No modo time vale também a régua da base (a que já passou por revisão no
- * merge): um clone novo não precisa de aceite para a régua que veio da main.
+ * In team mode the base ruleset also counts (the one already reviewed at
+ * merge): a fresh clone needs no acceptance for the ruleset that came from main.
  */
 
 import { createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
@@ -14,7 +15,7 @@ import { join } from 'node:path';
 
 import { ensureDir } from '../project.mjs';
 import { kitHome } from '../runtime.mjs';
-import { debtGrowth } from './regua.mjs';
+import { debtGrowth } from './ruleset.mjs';
 
 export function keyPath() {
   return join(kitHome(), 'key');
@@ -61,16 +62,16 @@ export function readRecord(id) {
 }
 
 export const REGUA_CHANGED =
-  'A régua foi alterada; mudança de régua é decisão humana: rode `quality-kit rules accept` num terminal (o agente não pode). Se não foi você, desfaça a alteração.';
+  'The ruleset was changed; ruleset changes are a human decision: run `quality-kit rules accept` at a terminal (the agent cannot). If it was not you, revert the change.';
 
 /**
- * Compara o estado de agora com os estados confiáveis (o aceite assinado e,
- * no modo time, o da base). Puro: devolve os problemas e se o aceite deve ser
- * regravado (a dívida encolheu, ou o clone ainda não tinha aceite).
+ * Compares the current state with the trusted states (the signed acceptance
+ * and, in team mode, the base one). Pure: returns the problems and whether the
+ * acceptance should be rewritten (the debt shrank, or the clone had none yet).
  */
 export function evaluate({ current, record, recordValid, baseState, formerKey, checkDebt = true }) {
   const trusted = [recordValid ? record : null, baseState].filter(Boolean);
-  if (record && !recordValid) return { problems: ['O registro de aceite da régua foi adulterado (assinatura não confere). ' + REGUA_CHANGED], resign: false };
+  if (record && !recordValid) return { problems: ['The ruleset acceptance record was tampered with (signature mismatch). ' + REGUA_CHANGED], resign: false };
   if (trusted.length === 0) return { problems: [REGUA_CHANGED], resign: false };
   const sameRegua = trusted.filter((state) => state.reguaHash === current.reguaHash);
   if (sameRegua.length === 0) return { problems: [REGUA_CHANGED], resign: false };
@@ -84,18 +85,18 @@ export function evaluate({ current, record, recordValid, baseState, formerKey, c
 function debtMessage(growth) {
   const listed = growth.slice(0, 20).map(({ key, before, after }) => `  ${key}  ${before} -> ${after}`);
   return [
-    'A dívida congelada cresceu (supressão de lint ou erro de tipo que a baseline não tinha):',
+    'The frozen debt grew (a lint suppression or type error the baseline did not have):',
     ...listed,
-    'Conserte o código em vez de suprimir: a baseline só guarda a dívida de quando a régua entrou e só pode encolher.',
+    'Fix the code instead of suppressing: the baseline only holds the debt from when the ruleset was adopted, and it can only shrink.',
   ].join('\n');
 }
 
 const AGENT_ENV = ['CLAUDECODE', 'CLAUDE_CODE_ENTRYPOINT', 'CODEX_SANDBOX', 'CODEX_SANDBOX_NETWORK_DISABLED', 'CODEX_THREAD_ID', 'QUALITY_KIT_HOOK'];
 
-/** Quem chama é um humano num terminal? Agente e hook não têm TTY nem passam aqui. */
+/** Is the caller a human at a terminal? Agents and hooks have no TTY and do not pass here. */
 export function humanAtTerminal({ env = process.env, stdin = process.stdin, stdout = process.stdout } = {}) {
   const agent = AGENT_ENV.find((name) => env[name]);
-  if (agent) return { ok: false, reason: `rodando dentro de um agente ou hook (${agent} definido)` };
-  if (!stdin.isTTY || !stdout.isTTY) return { ok: false, reason: 'sem terminal interativo (stdin/stdout não são TTY)' };
+  if (agent) return { ok: false, reason: `running inside an agent or hook (${agent} is set)` };
+  if (!stdin.isTTY || !stdout.isTTY) return { ok: false, reason: 'no interactive terminal (stdin/stdout are not a TTY)' };
   return { ok: true, reason: null };
 }

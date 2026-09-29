@@ -1,36 +1,38 @@
 ---
 name: bug-fix
-description: Playbook de correção de bug do quality-kit, escolhido pelo roteador task. Use quando algo que funcionava, ou devia funcionar, está errado - erro na tela, dado errado, crash, teste quebrado, regressão. Reproduzir primeiro, escrever o teste que falha, corrigir na causa raiz e provar na mesma superfície onde o bug apareceu.
+description: quality-kit bug-fix playbook, picked by the task router. Use when something that used to work, or should work, is wrong - an error on screen, wrong data, a crash, a broken test, a regression ("fix this bug", "it's broken", "corrige esse bug"). Reproduce first, write the failing test, fix the root cause and prove it on the same surface where the bug showed up.
 ---
 
 # bug-fix
 
-Copie estes passos para a lista de tarefas antes de começar (ver `task`).
+Copy these steps into the task list before you start (see `task`).
 
-1. **Reproduzir você mesmo**, na superfície onde o bug aparece: a tela
-   (`quality-kit verify <caminho>` com o caminho de demonstração do mapa, ou o
-   app rodando), a função num teste, o script. Se o gatilho é raro (fuso,
-   volume, celular, conexão lenta), force-o. Anote o comando e a saída.
-2. **Achar a causa, não o sintoma.** Liste hipóteses pelo caminho do dado e
-   elimine uma a uma com evidência de runtime (teste, log temporário, consulta),
-   não por leitura. Só avance quando souber o mecanismo: "X chega como Y porque Z".
-3. **Escrever o teste que falha**, ao lado do arquivo da causa. Ele tem que
-   falhar pelo motivo certo: rode e confira a mensagem. Cubra a borda vizinha
-   que o mesmo mecanismo quebraria. Se o bug só existe na tela, a prova do
-   passo 6 faz esse papel; registre isso.
-4. **Corrigir na causa raiz**, com o menor diff que elimina o mecanismo. Nada
-   de guarda no consumidor para esconder dado errado do produtor, `try/catch`
-   que engole, `setTimeout` ou `!important`. Se a causa está em código
-   compartilhado, confira os outros chamadores.
-5. **Ver o teste passar**, e a suíte do workspace inteira.
-6. **Provar na mesma superfície.** Repita a reprodução do passo 1 e mostre que
-   o erro sumiu.
-7. **Verificar:** `task/references/verificacao.md`.
-8. **Commit** com a causa na mensagem, não só o sintoma.
+1. **Reproduce it yourself**, on the surface where the bug shows up: the screen
+   (`quality-kit verify <path>` with the demo path from the map, or the
+   running app), the function in a test, the script. If the trigger is rare
+   (time zone, volume, mobile, slow connection), force it. Write down the
+   command and its output.
+2. **Find the cause, not the symptom.** List hypotheses along the data path and
+   rule them out one by one with runtime evidence (a test, a temporary log, a
+   query), not by reading. Only move on once you know the mechanism: "X arrives
+   as Y because Z".
+3. **Write the failing test**, next to the file where the cause lives. It has to
+   fail for the right reason: run it and check the message. Cover the adjacent
+   edge case the same mechanism would break. If the bug only exists on screen,
+   the proof in step 6 plays that role; note it.
+4. **Fix the root cause**, with the smallest diff that removes the mechanism. No
+   guard in the consumer to hide bad data from the producer, no `try/catch`
+   that swallows, no `setTimeout` or `!important`. If the cause is in shared
+   code, check the other callers.
+5. **Watch the test pass**, along with the whole workspace suite.
+6. **Prove it on the same surface.** Repeat the reproduction from step 1 and
+   show the error is gone.
+7. **Verify:** `task/references/verification.md`.
+8. **Commit** with the cause in the message, not just the symptom.
 
-## Resposta
+## Response
 
-- A causa em uma frase, com `arquivo:linha`.
-- A saída do teste falhando e depois passando, literal.
-- A prova do passo 6.
-- O que ficou de fora e por quê.
+- The cause in one sentence, with `file:line`.
+- The test output failing and then passing, verbatim.
+- The proof from step 6.
+- What was left out and why.

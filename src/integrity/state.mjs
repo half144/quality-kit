@@ -1,11 +1,11 @@
-/** O estado da régua de um projeto, lido do disco ou de uma ref do git. */
+/** A project's ruleset state, read from disk or from a git ref. */
 
 import { readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { architectureBaselinePath, suppressionsPath, tscBaselinePath, withDefaults } from '../config.mjs';
 import { git, gitShow, lines, listFiles } from '../git/git.mjs';
-import { flattenSuppressions, flattenTsc, hashEntries, isReguaFile, protectedFiles, readJson, reguaFilesIn } from './regua.mjs';
+import { flattenSuppressions, flattenTsc, hashEntries, isReguaFile, protectedFiles, readJson, reguaFilesIn } from './ruleset.mjs';
 
 function debtOf(config, readSuppressions, tsc, architecture) {
   const debt = {};
@@ -17,7 +17,7 @@ function debtOf(config, readSuppressions, tsc, architecture) {
   return debt;
 }
 
-/** O estado de agora: hash da régua e dívida congelada. */
+/** The current state: ruleset hash and frozen debt. */
 export function currentState(project, config) {
   const { repo, rulesDir } = project;
   const rulesEntries = reguaFilesIn(rulesDir).map((file) => [`rules/${file}`, readFileSync(join(rulesDir, file), 'utf8')]);
@@ -27,7 +27,7 @@ export function currentState(project, config) {
   return { reguaHash: hashEntries(entries), files: fileHashes(entries), debt: debtOf(config, readSuppressions, readJson(tscBaselinePath(rulesDir), {}), readJson(architectureBaselinePath(rulesDir), {})) };
 }
 
-/** O hash de cada arquivo da régua: só para mostrar ao humano o que mudou. */
+/** The hash of each ruleset file: only to show the human what changed. */
 export function fileHashes(entries) {
   return Object.fromEntries(entries.map(([name, content]) => [name, hashEntries([[name, content]]).slice(0, 12)]));
 }
@@ -38,8 +38,8 @@ function jsonAt(repo, ref, path, fallback) {
 }
 
 /**
- * O estado na ref de base, para o modo time: a régua que já passou pela
- * revisão do merge. Null se a base ainda não tinha o kit.
+ * The state at the base ref, for team mode: the ruleset that already went
+ * through merge review. Null if the base did not have the kit yet.
  */
 export function stateAt(project, ref) {
   const { repo, rulesDir } = project;

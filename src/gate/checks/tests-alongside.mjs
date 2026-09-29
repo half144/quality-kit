@@ -1,9 +1,9 @@
 /**
- * Arquivo novo de lógica chega com teste ao lado. Só olha as extensões de
- * lógica da config (componente se prova na tela). Arquivo que não declara
- * nenhuma função (só tipos, constantes ou dados) passa. Código extraído de
- * outro arquivo no mesmo diff (um módulo grande dividido) não conta como
- * lógica nova: o teste que cobria o código continua cobrindo.
+ * A new logic file comes with a test next to it. Only the logic extensions in
+ * the config are checked (components are proven on screen). A file that
+ * declares no function (only types, constants or data) passes. Code extracted
+ * from another file in the same diff (a large module split up) does not count
+ * as new logic: the test that covered it still covers it.
  */
 
 import { existsSync, readFileSync } from 'node:fs';
@@ -29,7 +29,7 @@ function runtimeKinds(ts) {
   ]);
 }
 
-/** Declara alguma função com corpo? Assinatura de tipo e overload não contam. */
+/** Does it declare any function with a body? Type signatures and overloads do not count. */
 export function hasLogic(source, fileName, ts = loadDep('typescript')) {
   const kinds = runtimeKinds(ts);
   const file = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, false);
@@ -42,9 +42,9 @@ export function isLogicCandidate(path, rules) {
 }
 
 /**
- * Onde o teste pode morar: nas pastas de `testDirs` (`{dir}` é a pasta do
- * arquivo; o padrão é ao lado dele), com o nome do módulo. A variante de
- * plataforma (`share.web.ts`) vale com o teste dela ou com o do módulo.
+ * Where the test may live: in the `testDirs` folders (`{dir}` is the file's
+ * folder; the default is next to it), named after the module. A platform
+ * variant (`share.web.ts`) is satisfied by its own test or the module's.
  */
 export function testCandidates(path, rules) {
   const name = basename(path, extname(path));
@@ -91,6 +91,6 @@ export function testsAlongsideProblem({ project, config, changes }) {
     read: (path) => readFileSync(join(repo, path), 'utf8'),
     removed,
   });
-  const items = untested.map((path) => `${path}  ->  crie ${testCandidates(path, config.testsAlongside)[0]}`);
-  return listing('Arquivo novo com lógica e sem teste ao lado', items);
+  const items = untested.map((path) => `${path}  ->  create ${testCandidates(path, config.testsAlongside)[0]}`);
+  return listing('New file with logic and no test next to it', items);
 }

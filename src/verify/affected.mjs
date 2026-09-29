@@ -1,13 +1,14 @@
 /**
- * Que telas uma mudança afeta, a partir do mapa:
+ * Which screens a change affects, based on the screen map:
  *
- * - arquivo de tela: a própria tela;
- * - outro arquivo na pasta de rotas (layout, estilo global): as telas daquela
- *   pasta para baixo;
- * - arquivo em `<features>/<x>`: as telas que citam `x` (ou a sub-feature);
- * - arquivo compartilhado, ou de feature que o mapa não cita: sobe pelos
- *   importadores até uma feature do mapa ou uma tela. Se ninguém o importa,
- *   vale para o app inteiro.
+ * - a screen file: that screen;
+ * - another file in the routes folder (layout, global style): the screens
+ *   from that folder down;
+ * - a file in `<features>/<x>`: the screens that list `x` (or the
+ *   sub-feature);
+ * - a shared file, or one from a feature the map does not list: walks up the
+ *   importers to a feature in the map or a screen. If nothing imports it, it
+ *   counts for the whole app.
  */
 
 import { appOf } from './apps.mjs';
@@ -20,14 +21,14 @@ export function isAppSource(apps, path) {
   return appOf(apps, path) !== null && !TEST_FILE.test(path);
 }
 
-/** Muda o que aparece na tela: componente, estilo ou rota. É o que obriga a prova. */
+/** Changes what shows on screen: component, style or route. This is what requires proof. */
 export function isUiFile(apps, path) {
   if (!isAppSource(apps, path)) return false;
   const app = appOf(apps, path);
   return UI_FILE.test(path) || (app.routesDir !== null && path.startsWith(app.routesDir));
 }
 
-/** `<features>/<x>` ou `<features>/<x>/<sub>` do arquivo, relativo ao `src` do app. */
+/** The file's `<features>/<x>` or `<features>/<x>/<sub>`, relative to the app's `src`. */
 export function featureFolderOf(app, path) {
   if (!app.featuresDir || !path.startsWith(app.featuresDir)) return null;
   const parts = path.slice(app.featuresDir.length).split('/');
@@ -38,7 +39,7 @@ export function featureFolderOf(app, path) {
   return `${prefix}${feature}/${next}`;
 }
 
-/** A tela que cita a feature inteira vale para as sub-features dela, e a que cita uma sub-feature, para a raiz da feature. */
+/** A screen that lists a whole feature covers its sub-features, and one that lists a sub-feature covers the feature's root. */
 function screensOfFeature(screens, app, folder) {
   const related = (listed) => listed === folder || listed.startsWith(`${folder}/`) || folder.startsWith(`${listed}/`);
   return screens.filter((screen) => screen.app === app.name && screen.features.some(related));
@@ -67,13 +68,13 @@ function screensOfPath(apps, screens, path, importersFor) {
   return owners.flatMap((owner) => directScreens(apps, screens, app, owner));
 }
 
-/** As telas afetadas, sem repetição e na ordem do mapa. */
+/** The affected screens, without duplicates and in map order. */
 export function affectedScreens(apps, screens, files, importersFor) {
   const hit = new Set(files.filter((path) => isAppSource(apps, path)).flatMap((path) => screensOfPath(apps, screens, path, importersFor)));
   return screens.filter((screen) => hit.has(screen));
 }
 
-/** O que o verify abre: uma entrada por caminho, só das telas com prova. */
+/** What verify opens: one entry per path, only for screens that take proof. */
 export function targetsOf(screens) {
   const seen = new Map();
   for (const screen of screens.filter((entry) => entry.open !== null)) seen.set(`${screen.app} ${screen.open}`, { app: screen.app, path: screen.open });

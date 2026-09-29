@@ -1,8 +1,8 @@
 /**
- * A linha de comando do quality-kit. Um comando só para o gate (`gate`), que
- * o hook do Claude (`hook`), os hooks do git (`git-hook`) e o CI (`gate --ci`)
- * chamam; o resto monta a régua (`install`, `detect`, `init`, `finalize`),
- * prova a tela (`verify`) e cuida da trava (`rules accept`, só humano).
+ * The quality-kit command line. A single command for the gate (`gate`), which
+ * the Claude hook (`hook`), the git hooks (`git-hook`) and CI (`gate --ci`)
+ * call; the rest builds the ruleset (`install`, `detect`, `init`, `finalize`),
+ * proves the screen (`verify`) and manages the lock (`rules accept`, humans only).
  */
 
 import { readFileSync } from 'node:fs';
@@ -21,21 +21,21 @@ import { mapCommand } from './verify/map-command.mjs';
 import { createSpaServer } from './verify/static-server.mjs';
 import { runVerify } from './verify/verify.mjs';
 
-const HELP = `quality-kit <comando>
+const HELP = `quality-kit <command>
 
-  install                     instala as dependências do kit nesta máquina (uma vez)
-  detect                      lê o projeto (stack, monorepo, forma do código) em JSON
-  init --answers <arquivo>    grava os rascunhos da régua (a skill setup chama)
-  finalize                    congela a dívida, instala os hooks e liga a régua
+  install                     installs the kit dependencies on this machine (once)
+  detect                      reads the project (stack, monorepo, code shape) as JSON
+  init --answers <file>       writes the ruleset drafts (called by the setup skill)
+  finalize                    freezes the debt, installs the hooks and enables the ruleset
   gate [--profile full|fast] [--base <ref>] [--ci] [--allow-regua-change]
-  verify <caminho>... | --changed | --all
-  map [--write]               confere o mapa de telas contra as rotas do código
-  serve <pasta> --port <n>    serve um export estático como SPA (para o verify)
-  paths                       onde moram a régua e o estado deste projeto
-  rules status                a régua de agora bate com a aceita?
-  rules accept                aceita a régua de agora (só humano, num terminal)
-  baseline                    congela a dívida de novo (só humano, num terminal)
-  hook | guard | git-hook     entradas dos hooks (Claude Code e git)`;
+  verify <path>... | --changed | --all
+  map [--write]               checks the screen map against the code routes
+  serve <folder> --port <n>   serves a static export as an SPA (for verify)
+  paths                       where this project's ruleset and state live
+  rules status                does the current ruleset match the accepted one?
+  rules accept                accepts the current ruleset (humans only, at a terminal)
+  baseline                    freezes the debt again (humans only, at a terminal)
+  hook | guard | git-hook     hook entry points (Claude Code and git)`;
 
 function option(argv, name) {
   const index = argv.indexOf(name);
@@ -44,7 +44,7 @@ function option(argv, name) {
 
 function activeProject() {
   const project = locateProject(process.cwd());
-  if (!project.mode) throw new Error('O quality-kit não está montado neste projeto: rode a skill `setup`.');
+  if (!project.mode) throw new Error('quality-kit is not set up in this project: run the `setup` skill.');
   return { project, config: loadConfig(project.rulesDir) };
 }
 
@@ -59,14 +59,14 @@ async function gateCommand(argv) {
     allowReguaChange: argv.includes('--allow-regua-change'),
   });
   if (problems.length === 0) {
-    process.stdout.write('quality-kit: aprovado.\n');
+    process.stdout.write('quality-kit: passed.\n');
     return 0;
   }
   console.error(report(problems));
   return 1;
 }
 
-/** Fica no ar até o verify matar o processo. */
+/** Stays up until verify kills the process. */
 function serveSpa(dir, port) {
   return new Promise(() => {
     createSpaServer(dir).listen(port, '127.0.0.1');
@@ -100,7 +100,7 @@ const COMMANDS = {
   rules: (argv) => {
     if (argv[0] === 'accept') return acceptRules();
     if (argv[0] === 'status') return rulesStatus();
-    return print('Uso: quality-kit rules accept | rules status');
+    return print('Usage: quality-kit rules accept | rules status');
   },
   baseline: () => rebaseline(),
 };

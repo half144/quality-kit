@@ -1,8 +1,8 @@
 /**
- * O mapa de telas (`FEATURE_MAP.md` na pasta da régua) lido como dado: uma
- * linha por tela, com o caminho que o verify abre e as features que a
- * alimentam. Nos apps com roteamento por arquivo (Next, Expo Router) também
- * deduz as rotas que existem, para cobrar o mapa que ficou para trás.
+ * The screen map (`FEATURE_MAP.md` in the ruleset folder) read as data: one
+ * row per screen, with the path verify opens and the features that feed it.
+ * In apps with file-based routing (Next, Expo Router) it also deduces the
+ * routes that exist, to flag a map that fell behind.
  */
 
 import { screenRoot } from './apps.mjs';
@@ -28,10 +28,10 @@ function screenFromRow(app, row) {
 }
 
 function isDataRow(line) {
-  return line.startsWith('|') && !/^\|\s*:?-/.test(line) && !/^\|\s*Arquivo\s*\|/i.test(line);
+  return line.startsWith('|') && !/^\|\s*:?-/.test(line) && !/^\|\s*(Arquivo|File)\s*\|/i.test(line);
 }
 
-/** O app de uma seção `## Nome (...)`: o nome do app é a primeira palavra. */
+/** The app of a `## Name (...)` section: the app name is the first word. */
 function sectionApp(line, apps) {
   const word = /^##\s+([^\s(]+)/.exec(line)?.[1]?.toLowerCase();
   return apps.find((app) => app.name.toLowerCase() === word)?.name ?? null;
@@ -64,7 +64,7 @@ function isScreenFile(framework, file) {
   return false;
 }
 
-/** Os arquivos de tela que o repo tem hoje, nos apps com roteamento por arquivo. */
+/** The screen files the repo has today, in apps with file-based routing. */
 export function screenFiles(apps, files) {
   return apps
     .filter((app) => app.routesDir)
@@ -77,7 +77,7 @@ export function screenFiles(apps, files) {
     );
 }
 
-/** Tela sem linha no mapa e linha sem tela: o mapa que ficou para trás. */
+/** Screens with no row in the map and rows with no screen: the map that fell behind. */
 export function mapGaps(apps, screens, files) {
   const existing = screenFiles(apps, files);
   const key = ({ app, file }) => `${app} ${file}`;
@@ -90,7 +90,7 @@ export function mapGaps(apps, screens, files) {
   };
 }
 
-/** A tela que o arquivo desenha, se ele for o arquivo de uma. */
+/** The screen the file renders, if it is a screen file. */
 export function screenOfFile(apps, screens, path) {
   return screens.find((screen) => {
     const app = apps.find((entry) => entry.name === screen.app);

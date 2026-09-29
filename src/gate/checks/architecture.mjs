@@ -1,8 +1,8 @@
 /**
- * O checker na árvore inteira, recortado para o que a mudança tocou. A
- * violação que já existia quando a régua entrou fica na baseline (por arquivo
- * e regra) e não trava quem só passa pelo arquivo; a nova reprova, e a
- * baseline encolhe quando alguém conserta.
+ * The checker over the whole tree, narrowed to what the change touched. A
+ * violation that already existed when the ruleset was adopted stays in the
+ * baseline (per file and rule) and does not block someone just passing through
+ * the file; a new one fails, and the baseline shrinks when someone fixes it.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -11,11 +11,11 @@ import { dirname, join } from 'node:path';
 import { checkRepository, formatViolations, violationsIn } from '../../architecture/checker.mjs';
 import { architectureBaselinePath } from '../../config.mjs';
 import { listFiles } from '../../git/git.mjs';
-import { readJson } from '../../integrity/regua.mjs';
+import { readJson } from '../../integrity/ruleset.mjs';
 import { ensureDir } from '../../project.mjs';
 import { countByFile, grownItems, shrinkBaseline } from '../debt.mjs';
 
-/** Violações no formato de contagem por arquivo e regra (o mesmo do tsc). */
+/** Violations in the per-file, per-rule count format (the same as tsc). */
 function asCounted(violations) {
   return violations.map((violation) => ({ ...violation, code: violation.rule }));
 }
@@ -35,7 +35,7 @@ export function architectureProblem({ project, config, changes, docPath }) {
   const baseline = readJson(path, {});
   const files = new Set([...changes.changed, ...changes.added.map((file) => dirname(file))]);
   const fresh = grownItems(asCounted(touched), baseline, files);
-  if (fresh.length > 0) return `Arquitetura (${docPath}):${formatViolations(fresh)}`;
+  if (fresh.length > 0) return `Architecture (${docPath}):${formatViolations(fresh)}`;
   const shrunk = shrinkBaseline(baseline, asCounted(touched), new Set(changes.changed));
   if (JSON.stringify(shrunk) !== JSON.stringify(baseline)) {
     ensureDir(dirname(path));

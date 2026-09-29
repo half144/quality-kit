@@ -1,13 +1,20 @@
 {
   "name": "quality-kit",
-  "owner": { "name": "half144", "url": "https://github.com/half144" },
-  "metadata": { "description": "O quality-kit: travas e playbooks para agentes de código em projetos JS/TS." },
+  "owner": {
+    "name": "half144",
+    "url": "https://github.com/half144"
+  },
+  "metadata": {
+    "description": "The quality-kit: guards and playbooks for coding agents in JS/TS projects.",
+    "version": "0.2.0"
+  },
   "plugins": [
     {
       "name": "quality-kit",
       "source": "./",
-      "description": "Gate de qualidade no Stop, trava de integridade da régua, skills de setup, playbooks e verify.",
-      "category": "development"
+      "description": "Quality gate on Stop, ruleset integrity lock, setup skill, playbooks and verify.",
+      "category": "development",
+      "version": "0.2.0"
     }
   ]
 }

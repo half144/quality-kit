@@ -1,28 +1,30 @@
 ---
 name: verify
-description: Prova na tela do quality-kit. Use quando a mudança mexe em tela (componente, estilo, rota), quando o gate cobrar "Prova na tela", ou quando pedirem "abre a tela e confere", "prova que funciona", "verifica no navegador", "roda o verify". Sobe o app com o comando da régua, abre as telas afetadas em desktop e celular (iPhone 14), reprova erro de console, exceção, hidratação, asset quebrado e tela vazia, e grava o relatório que o gate confere.
+description: quality-kit on-screen proof. Use when the change touches a screen (component, style, route), when the gate reports "On-screen proof", or when asked to "open the screen and check", "prove it works", "check it in the browser", "run verify" ("abre a tela e confere"). Starts the app with the ruleset's command, opens the affected screens on desktop and mobile (iPhone 14), fails on console errors, exceptions, hydration errors, broken assets and blank screens, and writes the report the gate checks.
 ---
 
-# verify: prova na tela
+# verify: on-screen proof
 
-Build e teste verdes não provam que a tela abre. O `quality-kit verify` abre.
+A green build and green tests don't prove the screen opens. `quality-kit verify`
+opens it.
 
-1. **Deduzir as telas:** `quality-kit verify --changed` usa o mapa de telas
-   (`FEATURE_MAP.md` da régua) e o grafo de imports para achar as telas que a
-   branch afeta. Para telas explícitas: `quality-kit verify /conta web:/painel`
-   (sem prefixo é o primeiro app da config). `--all` abre todas as do mapa.
-2. **Rodar e ler a saída.** Cada tela abre em desktop e celular. Reprova:
-   erro de console, exceção, erro de hidratação, 4xx/5xx de asset do próprio
-   site, navegação que não completa e tela sem texto.
-3. **Olhar as capturas** na pasta que o comando imprime. Relatório aprovado com
-   a tela errada não é prova: confira que a captura mostra o que a mudança
-   devia mostrar.
-4. **Reprovou:** desconfie do método primeiro (o caminho de demonstração tem
-   dado? o app subiu com o env certo? veja o log do servidor na mesma pasta),
-   depois corrija o código e rode de novo.
-5. O relatório vale para o estado dos arquivos em que rodou: mudou um arquivo,
-   rode de novo. O gate só libera com o relatório aprovado para o estado atual.
+1. **Work out the screens:** `quality-kit verify --changed` uses the screen map
+   (the ruleset's `FEATURE_MAP.md`) and the import graph to find the screens the
+   branch affects. For explicit screens: `quality-kit verify /conta web:/painel`
+   (no prefix means the first app in the config). `--all` opens every screen in
+   the map.
+2. **Run it and read the output.** Each screen opens on desktop and mobile. It
+   fails on: console errors, exceptions, hydration errors, 4xx/5xx for the site's
+   own assets, navigation that doesn't complete and a screen with no text.
+3. **Look at the screenshots** in the folder the command prints. A passing report
+   with the wrong screen is not proof: check that the screenshot shows what the
+   change was supposed to show.
+4. **If it failed:** suspect the method first (does the demo path have data? did
+   the app start with the right env? check the server log in the same folder),
+   then fix the code and run it again.
+5. The report is valid for the state of the files it ran against: change a file,
+   run it again. The gate only passes with a passing report for the current state.
 
-Tela nova, ou caminho de demonstração que mudou: use a skill `map` antes.
-Como subir o app (comando, build, env) fica em `verify.apps` da config da
-régua; mudar isso é mudar a régua (humano aceita).
+A new screen, or a demo path that changed: use the `map` skill first.
+How to start the app (command, build, env) lives in `verify.apps` in the
+ruleset config; changing that is changing the ruleset (a human accepts).

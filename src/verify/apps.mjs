@@ -1,7 +1,7 @@
 /**
- * Os apps que o verify conhece, normalizados da config: onde está o código
- * (`src`), a pasta de rotas do framework (se o roteamento é por arquivo) e a
- * pasta de features. Todos os caminhos são do repo e terminam em `/`.
+ * The apps verify knows about, normalized from the config: where the code is
+ * (`src`), the framework's routes folder (if routing is file-based) and the
+ * features folder. All paths are repo-relative and end in `/`.
  */
 
 const DEFAULT_LAYERS = ['api', 'assets', 'components', 'content', 'hooks', 'stores', 'types', 'utils'];
@@ -26,18 +26,18 @@ export function appOf(apps, path) {
   return apps.filter((app) => path.startsWith(app.src)).sort((a, b) => b.src.length - a.src.length)[0] ?? null;
 }
 
-/** Onde mora o `file` de uma linha do mapa: relativo à pasta de rotas, ou ao `src`. */
+/** Where a map row's `file` lives: relative to the routes folder, or to `src`. */
 export function screenRoot(app) {
   return app.routesDir ?? app.src;
 }
 
-/** `/caminho` é do primeiro app; `nome:/caminho` é do app com esse nome. */
+/** `/path` belongs to the first app; `name:/path` to the app with that name. */
 export function parseTarget(apps, arg) {
   const match = /^(?:([a-z0-9-]+):)?(\/.*)$/i.exec(arg);
-  if (!match || /\s/.test(arg)) throw new Error(`"${arg}" não é um caminho: comece com / (ou <app>:/).`);
+  if (!match || /\s/.test(arg)) throw new Error(`"${arg}" is not a path: start with / (or <app>:/).`);
   const [, name, path] = match;
   const app = name ? apps.find((entry) => entry.name === name) : apps[0];
-  if (!app) throw new Error(`Não há app "${name ?? ''}" na config do verify.`);
+  if (!app) throw new Error(`There is no app "${name ?? ''}" in the verify config.`);
   return { app: app.name, path };
 }
 

@@ -1,15 +1,15 @@
 /**
- * Typecheck estrito sem mexer no tsconfig: as flags da régua entram na linha
- * de comando do `tsc`. O programa inteiro é checado, mas só cobra o que caiu
- * nos arquivos tocados: erro que a baseline já tinha é dívida antiga; erro
- * novo, ou a mais no mesmo arquivo, reprova.
+ * Strict typecheck without touching tsconfig: the ruleset flags go on the `tsc`
+ * command line. The whole program is checked, but only what lands in touched
+ * files is enforced: an error the baseline already had is old debt; a new
+ * error, or an extra one in the same file, fails.
  */
 
 import { writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 
 import { tscBaselinePath } from '../../config.mjs';
-import { readJson } from '../../integrity/regua.mjs';
+import { readJson } from '../../integrity/ruleset.mjs';
 import { ensureDir } from '../../project.mjs';
 import { projectOrKitBin } from '../bins.mjs';
 import { grownItems, shrinkBaseline } from '../debt.mjs';
@@ -18,7 +18,7 @@ import { listing, run } from '../run.mjs';
 const ERROR_LINE = /^(.+?)\((\d+),(\d+)\): error (TS\d+): (.*)$/;
 const GLOBAL_ERROR = /^error (TS\d+): (.*)$/;
 
-/** Os erros do `tsc --pretty false`, com o arquivo relativo ao workspace. */
+/** The errors from `tsc --pretty false`, with files relative to the workspace. */
 export function parseTscOutput(output, cwd) {
   const errors = [];
   const global = [];
@@ -40,7 +40,7 @@ export function tscArgs(tsconfig, flags) {
   return ['-p', tsconfig, '--noEmit', '--pretty', 'false', ...flags];
 }
 
-/** Mede o programa inteiro: usado pelo gate e pela baseline do setup. */
+/** Measures the whole program: used by the gate and by the setup baseline. */
 export async function measureTypes(project, config, workspace) {
   const cwd = join(project.repo, workspace.dir);
   const bin = projectOrKitBin(project.repo, workspace.dir, 'tsc');
@@ -56,7 +56,7 @@ function dedupe(errors) {
 export async function typecheckProblem({ project, config }, { workspace, files }) {
   if (tsconfigsOf(workspace).length === 0) return null;
   const { errors, global } = await measureTypes(project, config, workspace);
-  if (global.length > 0) return `TypeScript em ${workspace.dir || 'raiz'} não rodou:\n${global.join('\n')}`;
+  if (global.length > 0) return `TypeScript in ${workspace.dir || 'root'} failed to run:\n${global.join('\n')}`;
   const path = tscBaselinePath(project.rulesDir);
   const all = readJson(path, {});
   const baseline = all[workspace.dir] ?? {};
@@ -64,7 +64,7 @@ export async function typecheckProblem({ project, config }, { workspace, files }
   const fresh = grownItems(errors, baseline, touched);
   if (fresh.length > 0) {
     const lines = fresh.map(({ file, line, column, code, message }) => `${workspace.dir}${file}(${line},${column}): ${code} ${message}`);
-    return listing(`TypeScript estrito (${config.typescript.flags.join(' ') || 'tsconfig do projeto'}): erro novo nos arquivos tocados`, lines);
+    return listing(`Strict TypeScript (${config.typescript.flags.join(' ') || 'project tsconfig'}): new errors in touched files`, lines);
   }
   const shrunk = shrinkBaseline(baseline, errors, touched);
   if (JSON.stringify(shrunk) !== JSON.stringify(baseline)) {

@@ -1,9 +1,9 @@
 /**
- * O gate: um comando só, chamado pelo hook Stop/SubagentStop do Claude Code,
- * pelos hooks do git e pelo CI. Primeiro a trava de integridade (a régua é a
- * aceita e a dívida não cresceu); depois, nos arquivos que a branch tocou em
- * relação à base, os checks ligados na régua. O resultado limpo fica gravado
- * por conteúdo: turno que não mexeu em nada não paga de novo.
+ * The gate: a single command, called by the Claude Code Stop/SubagentStop hook,
+ * by the git hooks and by CI. First the integrity lock (the ruleset is the
+ * accepted one and the debt has not grown); then, on the files the branch
+ * touched relative to the base, the checks enabled in the ruleset. A clean
+ * result is recorded by content: a turn that changed nothing does not pay again.
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -31,8 +31,8 @@ export function enabledChecks(config, profile) {
 
 export function report(problems) {
   return [
-    'O quality-kit reprovou a mudança (o mesmo gate do hook, do git e do CI). Corrija antes de encerrar.',
-    'Refatore o código: desligar regra por comentário, suprimir em massa ou editar a régua também reprova.',
+    'quality-kit failed this change (the same gate as the hook, git and CI). Fix it before finishing.',
+    'Refactor the code: disabling rules with comments, bulk suppressions or editing the ruleset also fail.',
     ...problems,
   ].join('\n\n');
 }
@@ -69,9 +69,9 @@ function alreadyClean(project, profile, stamp) {
 }
 
 /**
- * Roda o gate e devolve os problemas (lista vazia é aprovado). `profile` é
- * `full` (hook e CI) ou `fast` (hooks do git); `ci` desliga o cache, o aceite
- * local e a prova na tela.
+ * Runs the gate and returns the problems (an empty list means passed).
+ * `profile` is `full` (hook and CI) or `fast` (git hooks); `ci` disables the
+ * cache, the local acceptance and the on-screen proof.
  */
 export async function runGate({ project, config, profile = 'full', base, ci = false, allowReguaChange = false }) {
   const baseSha = mergeBase(project.repo, baseRefs(base ?? config.base));

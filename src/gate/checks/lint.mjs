@@ -1,8 +1,8 @@
 /**
- * Lint com tipos e zero warning nos arquivos tocados. No modo `kit` o ESLint é
- * o do kit, com a config do projeto por baixo e o preset por cima, e a dívida
- * congelada fica na pasta da régua (`--suppressions-location`). No modo
- * `project` vale o ESLint e a config que o projeto já tem.
+ * Type-aware lint with zero warnings on the touched files. In `kit` mode ESLint
+ * is the kit's own, with the project config underneath and the preset on top,
+ * and the frozen debt lives in the ruleset folder (`--suppressions-location`).
+ * In `project` mode the project's own ESLint and config apply.
  */
 
 import { existsSync } from 'node:fs';
@@ -15,7 +15,7 @@ import { depBin } from '../../runtime.mjs';
 import { projectOrKitBin } from '../bins.mjs';
 import { run } from '../run.mjs';
 
-/** Os argumentos do ESLint para um workspace. Puro. */
+/** The ESLint arguments for a workspace. Pure. */
 export function eslintArgs({ overlay, suppressions, suppressionsExist, files, extra = [] }) {
   return [
     ...(overlay ? ['--config', overlay] : []),
@@ -48,5 +48,5 @@ export async function lintProblem(context, { workspace, files }) {
   if (!workspace.lint) return null;
   const { bin, args, cwd } = lintInvocation({ ...context, workspace, files });
   const { status, output } = await run(bin, args, { cwd });
-  return status === 0 ? null : `ESLint em ${workspace.dir || 'raiz'}:\n${output.trim()}`;
+  return status === 0 ? null : `ESLint in ${workspace.dir || 'root'}:\n${output.trim()}`;
 }

@@ -1,7 +1,7 @@
 /**
- * Dívida contada por arquivo e código (erro do tsc ou regra de arquitetura):
- * `{ arquivo: { código: n } }`. A de agora não passa da baseline nos arquivos
- * tocados, e a baseline encolhe quando alguém conserta.
+ * Debt counted per file and code (tsc error or architecture rule):
+ * `{ file: { code: n } }`. Current debt may not exceed the baseline in touched
+ * files, and the baseline shrinks when someone fixes something.
  */
 
 export function countByFile(errors) {
@@ -13,14 +13,14 @@ export function countByFile(errors) {
   return counts;
 }
 
-/** Os itens dos arquivos tocados em (arquivo, código) que passaram da baseline. */
+/** Items in touched files whose (file, code) count exceeds the baseline. */
 export function grownItems(errors, baseline, touched) {
   const counts = countByFile(errors.filter((error) => touched.has(error.file)));
   const grown = (file, code) => (counts[file]?.[code] ?? 0) > (baseline[file]?.[code] ?? 0);
   return errors.filter((error) => touched.has(error.file) && grown(error.file, error.code));
 }
 
-/** A baseline com os arquivos tocados encolhidos para o que sobrou (nunca cresce). */
+/** The baseline with touched files shrunk to what is left (it never grows). */
 export function shrinkBaseline(baseline, errors, touched) {
   const counts = countByFile(errors);
   const next = { ...baseline };

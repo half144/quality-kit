@@ -1,4 +1,4 @@
-/** Os arquivos tocados agrupados por workspace, com o caminho relativo a ele. */
+/** Touched files grouped by workspace, with paths relative to it. */
 
 import { workspaceOf } from '../config.mjs';
 

@@ -1,9 +1,9 @@
 /**
- * Direção dos imports dentro de uma raiz: compartilhado → feature → rotas.
- * Com features ligadas, uma feature não importa de outra; sub-feature importa
- * da raiz da própria feature, nunca de uma irmã; a raiz da feature não importa
- * das próprias sub-features. `imports.forbid` da config soma regras de
- * caminho para caminho.
+ * Import direction inside a root: shared → feature → routes. With features
+ * enabled, a feature does not import from another one; a sub-feature imports
+ * from its own feature's root, never from a sibling; a feature's root does not
+ * import from its own sub-features. `imports.forbid` in the config adds
+ * path-to-path rules.
  */
 
 import path from 'node:path';
@@ -14,7 +14,7 @@ import { matchesAny } from './glob.mjs';
 const FEATURE_KINDS = ['feature', 'subfeature'];
 const IMPORT = /(?:\bfrom\s+|\bimport\s*\(\s*|\brequire\s*\(\s*|\bimport\s+|\b(?:vi|jest)\.mock\s*\(\s*)['"]([^'"\n]+)['"]/g;
 
-/** A que camada um arquivo da raiz pertence. */
+/** Which layer a file in the root belongs to. */
 export function layerOf(root, relative) {
   const parts = relative.split('/');
   if (parts.length === 1) return { kind: 'root' };
@@ -28,19 +28,19 @@ export function layerOf(root, relative) {
 
 function featureToFeature(root, from, to) {
   if (to.feature !== from.feature) {
-    return `feature "${from.feature}" importando de "${to.feature}": o que as duas usam sobe para o compartilhado, e a composição acontece nas rotas.`;
+    return `feature "${from.feature}" imports from "${to.feature}": whatever both use moves up to shared code, and composition happens in the routes.`;
   }
   if (to.kind !== 'subfeature' || to.sub === from.sub) return null;
   return from.kind === 'feature'
-    ? `a raiz de "${from.feature}" importando da sub-feature "${to.sub}": a dependência vai da sub-feature para a raiz, não o contrário.`
-    : `sub-feature "${from.sub}" importando da irmã "${to.sub}": o que as duas usam sobe para a raiz de "${from.feature}".`;
+    ? `the root of "${from.feature}" imports from sub-feature "${to.sub}": the dependency goes from the sub-feature to the root, not the other way around.`
+    : `sub-feature "${from.sub}" imports from its sibling "${to.sub}": whatever both use moves up to the root of "${from.feature}".`;
 }
 
-/** O motivo de o import entre as duas camadas ser proibido, ou null. */
+/** Why an import between the two layers is forbidden, or null. */
 export function layerViolation(root, from, to) {
-  if (to.kind === 'routes' && from.kind !== 'routes') return `só ${root.routes.dir}/ importa de ${root.routes.dir}/.`;
+  if (to.kind === 'routes' && from.kind !== 'routes') return `only ${root.routes.dir}/ may import from ${root.routes.dir}/.`;
   if (!FEATURE_KINDS.includes(to.kind)) return null;
-  if (from.kind === 'shared') return 'o compartilhado não importa de feature: suba o que ele precisa para o compartilhado.';
+  if (from.kind === 'shared') return 'shared code does not import from a feature: move what it needs up to shared code.';
   return FEATURE_KINDS.includes(from.kind) ? featureToFeature(root, from, to) : null;
 }
 
@@ -49,7 +49,7 @@ function customViolation(root, fromPath, toPath) {
   return rule ? rule.message : null;
 }
 
-/** O arquivo da raiz que um import alcança, ou null se ele sai dela. */
+/** The root file an import reaches, or null if it leaves the root. */
 export function importTarget(root, relative, spec) {
   const alias = Object.entries(root.aliases ?? {}).find(([prefix]) => spec.startsWith(prefix));
   if (alias) return path.posix.normalize(path.posix.join(alias[1] || '.', spec.slice(alias[0].length)));
@@ -62,7 +62,7 @@ export function importSpecifiers(source) {
   return [...source.matchAll(IMPORT)].map(([, spec]) => spec);
 }
 
-/** Os problemas de import de um arquivo, como pares [regra, mensagem]. */
+/** A file's import problems, as [rule, message] pairs. */
 export function checkImports(root, relative, source) {
   const from = layerOf(root, relative);
   const problems = [];

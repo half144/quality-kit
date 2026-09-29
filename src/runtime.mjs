@@ -1,8 +1,8 @@
 /**
- * Onde moram as dependências do kit (eslint, typescript-eslint, knip, jscpd,
- * playwright). Elas são instaladas uma vez por máquina, nunca no projeto-alvo:
- * primeiro vale o node_modules do próprio plugin (clone de desenvolvimento),
- * depois o runtime que o `quality-kit install` monta em ~/.quality-kit.
+ * Where the kit's dependencies live (eslint, typescript-eslint, knip, jscpd,
+ * playwright). They are installed once per machine, never in the target
+ * project: the plugin's own node_modules comes first (development clone), then
+ * the runtime that `quality-kit install` builds in ~/.quality-kit.
  */
 
 import { existsSync, readFileSync } from 'node:fs';
@@ -25,14 +25,14 @@ export function runtimeDir(version = kitVersion()) {
   return join(kitHome(), 'runtime', version);
 }
 
-/** A pasta cujo node_modules tem as dependências, ou null se ninguém instalou. */
+/** The folder whose node_modules has the dependencies, or null if nobody installed them. */
 export function depsRoot({ candidates = [KIT_ROOT, runtimeDir()], exists = existsSync } = {}) {
   return candidates.find((dir) => exists(join(dir, 'node_modules', 'eslint', 'package.json'))) ?? null;
 }
 
 export class MissingDepsError extends Error {
   constructor() {
-    super('As dependências do quality-kit não estão instaladas nesta máquina: rode `quality-kit install`.');
+    super('The quality-kit dependencies are not installed on this machine: run `quality-kit install`.');
   }
 }
 
@@ -42,7 +42,7 @@ function requireFromDeps() {
   return createRequire(join(root, 'package.json'));
 }
 
-/** O caminho absoluto de um pacote das dependências do kit. */
+/** The absolute path of a package from the kit's dependencies. */
 export function resolveDep(name) {
   return requireFromDeps().resolve(name);
 }
@@ -51,7 +51,7 @@ export function loadDep(name) {
   return requireFromDeps()(name);
 }
 
-/** O executável de um pacote das dependências (node_modules/.bin). */
+/** The executable of a package from the dependencies (node_modules/.bin). */
 export function depBin(name) {
   const root = depsRoot();
   if (!root) throw new MissingDepsError();

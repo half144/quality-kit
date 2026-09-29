@@ -24,7 +24,7 @@ const VITE = {
   shape: shapeOf(FILES, 'src'),
 };
 
-test('detect: stack, workspaces e forma do código', () => {
+test('detect: stack, workspaces and code shape', () => {
   assert.equal(VITE.stack.test, 'vitest');
   assert.ok(VITE.stack.vite && VITE.stack.react && !VITE.stack.next);
   assert.deepEqual(workspacePatterns({ workspaces: ['apps/*'] }, "packages:\n  - 'packages/*'\n"), ['apps/*', 'packages/*']);
@@ -33,7 +33,7 @@ test('detect: stack, workspaces e forma do código', () => {
   assert.equal(VITE.shape.barrels, 1);
 });
 
-test('config "manter": a forma de hoje vira régua', () => {
+test('"keep" config: today\'s shape becomes the ruleset', () => {
   const config = buildConfig({ packages: [VITE], base: 'origin/main', packageManager: 'npm' }, { mode: 'local', architecture: 'keep' });
   const [root] = config.architecture.roots;
   assert.deepEqual(root.allowedTop, ['components', 'hooks', 'lib']);
@@ -44,7 +44,7 @@ test('config "manter": a forma de hoje vira régua', () => {
   assert.ok(!('ci' in config));
 });
 
-test('config "sugerir": padrão por features, kebab e sem barril; modo time com CI', () => {
+test('"suggest" config: feature-based layout, kebab case and no barrels; team mode with CI', () => {
   const config = buildConfig({ packages: [VITE], base: 'origin/main', packageManager: 'pnpm' }, { mode: 'team', architecture: 'suggest' });
   const [root] = config.architecture.roots;
   assert.ok(root.allowedTop.includes('features'));
@@ -54,15 +54,15 @@ test('config "sugerir": padrão por features, kebab e sem barril; modo time com 
   assert.ok(config.integrity.protect.includes('.github/workflows/quality.yml'));
 });
 
-test('docs: a régua em texto e o mapa com a tela de entrada', () => {
+test('docs: the ruleset as text and the map with the entry screen', () => {
   const config = buildConfig({ packages: [VITE], base: 'origin/main', packageManager: 'npm' }, { mode: 'local' });
-  assert.match(architectureDoc(config), /Pastas do topo permitidas: `components`, `hooks`, `lib`/);
+  assert.match(architectureDoc(config), /Allowed top-level folders: `components`, `hooks`, `lib`/);
   const map = featureMapDoc(config, FILES);
   const apps = normalizeApps(config.verify);
   assert.deepEqual(parseFeatureMap(map, apps).map(({ file, open }) => `${file} ${open}`), ['App.tsx /']);
 });
 
-test('hooks do git: novo, ou o existente com o bloco antes do exit 0', () => {
+test('git hooks: a new one, or the existing one with the block before exit 0', () => {
   assert.ok(mergeHook(null, 'pre-push').startsWith('#!/bin/sh\n# quality-kit'));
   const merged = mergeHook('#!/bin/sh\necho oi\nexit 0\n', 'pre-push');
   assert.ok(merged.indexOf('# quality-kit') < merged.lastIndexOf('exit 0'));
@@ -70,7 +70,7 @@ test('hooks do git: novo, ou o existente com o bloco antes do exit 0', () => {
   assert.match(hookBlock('pre-commit'), /git-hook pre-commit/);
 });
 
-test('modo time: deny somado, AGENTS.md entre marcadores e workflow com a versão do kit', () => {
+test('team mode: merged deny list, AGENTS.md between markers and workflow pinned to the kit version', () => {
   const settings = mergeDeny({ permissions: { deny: ['Edit(/x)'] }, hooks: {} });
   assert.deepEqual(settings.permissions.deny, ['Edit(/x)', ...DENY]);
   const agents = mergeAgents('# A\n\ntexto', '<!-- quality-kit:start -->\nnovo\n<!-- quality-kit:end -->\n');
@@ -81,22 +81,22 @@ test('modo time: deny somado, AGENTS.md entre marcadores e workflow com a versã
   assert.match(workflow, /regua-aprovada/);
 });
 
-test('config do ESLint: projeto por baixo, preset do kit e extras por cima', () => {
+test('ESLint config: project underneath, kit preset and extras on top', () => {
   const source = overlaySource({ deps: '/deps', presetPath: '/kit/preset.cjs', projectConfig: '/repo/eslint.config.js', extraRules: '/regua/lint-extra.cjs', tsconfigRootDir: '/repo', ignores: ['**/dist/**'] });
   assert.match(source, /await import\("file:\/\/\/repo\/eslint\.config\.js"\)/);
   assert.match(source, /kitRequire\("\/regua\/lint-extra\.cjs"\)/);
   assert.match(overlaySource({ deps: '/d', presetPath: '/p', projectConfig: null, extraRules: null, tsconfigRootDir: '/r', ignores: [] }), /js\.configs\.recommended/);
 });
 
-test('flags do tsc viram compilerOptions do tsconfig estrito do lint', () => {
+test('tsc flags become compilerOptions in the strict lint tsconfig', () => {
   assert.deepEqual(flagsToOptions(['--strict', '--target', 'es2022', '--noUncheckedIndexedAccess']), { strict: true, target: 'es2022', noUncheckedIndexedAccess: true });
 });
 
-test('hook desligado na régua não é instalado', () => {
+test('a hook turned off in the ruleset is not installed', () => {
   assert.deepEqual(hookNames({ preCommit: 'off', prePush: 'fast' }), ['pre-push']);
   assert.deepEqual(hookNames({ preCommit: 'fast', prePush: 'full' }), ['pre-commit', 'pre-push']);
 });
 
-test('o trecho do AGENTS.md aponta para os documentos do projeto', () => {
+test('the AGENTS.md snippet points to the project docs', () => {
   assert.match(agentsSnippet({ docs: { architecture: 'docs/ARCHITECTURE.md', map: null } }), /`docs\/ARCHITECTURE\.md`[\s\S]*`\.quality\/FEATURE_MAP\.md`/);
 });

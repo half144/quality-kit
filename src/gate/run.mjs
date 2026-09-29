@@ -1,4 +1,4 @@
-/** Roda um comando sem travar os outros; `output` junta as duas saídas na ordem em que chegam. */
+/** Runs a command without blocking the others; `output` merges both streams in arrival order. */
 
 import { spawn } from 'node:child_process';
 
@@ -19,7 +19,7 @@ export function run(command, args, { cwd, env = {}, shell = false } = {}) {
   });
 }
 
-/** Um título e uma lista, ou null se a lista está vazia. */
+/** A title and a list, or null if the list is empty. */
 export function listing(title, items) {
   return items.length === 0 ? null : `${title}:\n${items.map((item) => `  ${item}`).join('\n')}`;
 }

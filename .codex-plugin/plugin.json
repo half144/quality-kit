@@ -1,21 +1,35 @@
 {
   "name": "quality-kit",
-  "version": "0.1.0",
-  "description": "Travas mecânicas e playbooks para agentes de código entregarem com qualidade em projetos JS/TS.",
-  "author": { "name": "half144", "url": "https://github.com/half144" },
+  "version": "0.2.0",
+  "description": "Mechanical guards and playbooks that make coding agents ship quality work in JS/TS projects.",
+  "author": {
+    "name": "half144",
+    "url": "https://github.com/half144"
+  },
   "homepage": "https://github.com/half144/quality-kit",
   "repository": "https://github.com/half144/quality-kit",
   "license": "MIT",
-  "keywords": ["quality", "gate", "playbooks", "codex"],
+  "keywords": [
+    "quality",
+    "gate",
+    "playbooks",
+    "codex"
+  ],
   "skills": "./skills/",
   "interface": {
     "displayName": "quality-kit",
-    "shortDescription": "Gate de qualidade, trava da régua e playbooks.",
-    "longDescription": "Monta num projeto JS/TS a escada de confiança: estrutura que impede o erro, análise estática e prova em runtime. No Codex as travas são os hooks do git e o CI.",
+    "shortDescription": "Quality gate, ruleset lock and playbooks.",
+    "longDescription": "Builds the trust ladder in a JS/TS project: structure that prevents the mistake, static analysis and runtime proof. In Codex the guards are the git hooks and CI.",
     "developerName": "half144",
     "category": "Developer Tools",
-    "capabilities": ["Skills", "Workflows"],
+    "capabilities": [
+      "Skills",
+      "Workflows"
+    ],
     "websiteURL": "https://github.com/half144/quality-kit",
-    "defaultPrompt": ["Monte o quality-kit neste projeto.", "Use o playbook de bug-fix do quality-kit."]
+    "defaultPrompt": [
+      "Set up the quality-kit in this project.",
+      "Use the quality-kit bug-fix playbook."
+    ]
   }
 }

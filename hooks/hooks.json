@@ -1,5 +1,5 @@
 {
-  "description": "quality-kit: o gate antes de o agente encerrar e a guarda da trava de integridade. Só age nos projetos onde a skill setup montou o kit.",
+  "description": "quality-kit: the gate before the agent finishes and the integrity lock guard. Only acts in projects where the setup skill set up the kit.",
   "hooks": {
     "Stop": [
       {
@@ -8,7 +8,7 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/quality-kit.mjs\" hook",
             "timeout": 900,
-            "statusMessage": "quality-kit: gate da mudança"
+            "statusMessage": "quality-kit: change gate"
           }
         ]
       }
@@ -20,7 +20,7 @@
             "type": "command",
             "command": "node \"${CLAUDE_PLUGIN_ROOT}/bin/quality-kit.mjs\" hook",
             "timeout": 900,
-            "statusMessage": "quality-kit: gate do subagente"
+            "statusMessage": "quality-kit: subagent gate"
           }
         ]
       }

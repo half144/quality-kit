@@ -1,35 +1,34 @@
 ---
 name: refactor
-description: Playbook de refatoração do quality-kit, escolhido pelo roteador task. Use para extrair, mover, renomear, quebrar arquivo grande, subir peça para o compartilhado, pagar dívida de lint ou de tipo, sem mudar o que o sistema faz. Registrar o comportamento com testes de caracterização antes de mexer e provar comportamento idêntico depois.
+description: quality-kit refactoring playbook, picked by the task router. Use to extract, move, rename, split a large file, move a piece up to shared code, or pay down lint or type debt, without changing what the system does ("refactor", "extract", "split this file", "clean up", "move"). Lock in the behavior with characterization tests before touching anything and prove identical behavior afterwards.
 ---
 
 # refactor
 
-Copie estes passos para a lista de tarefas antes de começar (ver `task`).
-Refatorar é mudar a forma sem mudar o comportamento. Bug no caminho: anote e
-corrija depois, pelo `bug-fix`.
+Copy these steps into the task list before you start (see `task`).
+Refactoring is changing the shape without changing the behavior. A bug along the
+way: note it and fix it later, through `bug-fix`.
 
-1. **Fixar o comportamento atual** com testes de caracterização: saída de
-   função pura para entradas reais e de borda, render do componente com o que a
-   pessoa vê e clica, retorno do backend. Typecheck e lint não contam. Verde.
-2. **Nomear a forma-alvo:** qual estrutura falta e onde cada peça mora pela
-   régua. Para caber num limite do lint (300 linhas, 80 por função,
-   complexidade 15), extraia por responsabilidade, não por tamanho.
-3. **Subtrair antes de somar:** apague código morto e duplicação primeiro.
-   Abstração nova só com repetição concreta.
-4. **Passos pequenos, testes verdes em cada um.** Migre todos os chamadores e
-   apague a API velha na mesma leva: nada de reexport de compatibilidade entre
-   pastas. Código movido leva a própria dívida congelada; arquivo novo nasce
-   limpo.
-5. **Provar comportamento idêntico:** os mesmos testes, sem mudar uma
-   expectativa. Tela afetada passa pelo `quality-kit verify --changed`.
-6. **Verificar:** `task/references/verificacao.md`. Meça os maiores arquivos
-   tocados: nenhum arquivo gigante novo. A baseline encolhe sozinha quando você
-   conserta dívida antiga; ela nunca cresce.
-7. **Reverter se não ficou melhor.**
+1. **Lock in the current behavior** with characterization tests: pure function
+   output for real and edge-case inputs, component render with what the person
+   sees and clicks, backend return values. Typecheck and lint don't count. Green.
+2. **Name the target shape:** what structure is missing and where each piece
+   lives according to the ruleset. To fit a lint limit (300 lines, 80 per
+   function, complexity 15), extract by responsibility, not by size.
+3. **Subtract before you add:** delete dead code and duplication first.
+   A new abstraction only with concrete repetition.
+4. **Small steps, tests green at each one.** Migrate every caller and delete the
+   old API in the same batch: no compatibility re-exports across folders. Moved
+   code carries its own frozen debt; a new file is born clean.
+5. **Prove identical behavior:** the same tests, without changing a single
+   expectation. Affected screens go through `quality-kit verify --changed`.
+6. **Verify:** `task/references/verification.md`. Measure the largest files you
+   touched: no new giant file. The baseline shrinks on its own when you fix old
+   debt; it never grows.
+7. **Revert if it didn't get better.**
 
-## Resposta
+## Response
 
-- A forma antes e depois, em uma ou duas linhas.
-- Os testes de caracterização e a saída deles antes e depois.
-- Os chamadores migrados e o que foi apagado.
+- The shape before and after, in one or two lines.
+- The characterization tests and their output before and after.
+- The callers migrated and what was deleted.

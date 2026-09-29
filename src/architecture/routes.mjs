@@ -1,7 +1,7 @@
 /**
- * A pasta de rotas do framework (`app/` do Next e do Expo Router) só guarda
- * rota: o que o framework trata como arquivo especial. O código da rota mora
- * fora dela.
+ * The framework's routes folder (`app/` in Next and Expo Router) only holds
+ * routes: what the framework treats as special files. The route's code lives
+ * outside it.
  */
 
 import { baseName, isTest } from './names.mjs';
@@ -21,16 +21,16 @@ function withoutTestSuffix(fileName) {
 
 function checkNextFile(fileName) {
   if (NEXT_ROUTE_FILE.test(withoutTestSuffix(fileName))) return [];
-  return [[APP_ROUTES_ONLY, `"${fileName}" não é arquivo de rota do Next: mova para fora da pasta de rotas.`]];
+  return [[APP_ROUTES_ONLY, `"${fileName}" is not a Next route file: move it out of the routes folder.`]];
 }
 
 function checkExpoFile(fileName, source) {
-  if (isTest(fileName)) return [[APP_ROUTES_ONLY, 'o Expo Router trata todo arquivo da pasta de rotas como rota: teste o componente, não o arquivo de rota.']];
+  if (isTest(fileName)) return [[APP_ROUTES_ONLY, 'Expo Router treats every file in the routes folder as a route: test the component, not the route file.']];
   if (EXPO_SPECIAL_FILE.test(fileName)) return [];
-  if (!/\.tsx?$/.test(fileName)) return [[APP_ROUTES_ONLY, `"${fileName}" não é rota: o Expo Router só aceita rota ali.`]];
+  if (!/\.tsx?$/.test(fileName)) return [[APP_ROUTES_ONLY, `"${fileName}" is not a route: Expo Router only accepts routes there.`]];
   const problems = [];
-  if (!/export default/.test(source())) problems.push([APP_ROUTES_ONLY, `"${fileName}" não tem default export, então não é rota: mova para fora da pasta de rotas.`]);
-  if (!EXPO_SEGMENT.test(baseName(fileName))) problems.push([ROUTE_SEGMENT_RULE, `rota "${fileName}" fora do padrão.`]);
+  if (!/export default/.test(source())) problems.push([APP_ROUTES_ONLY, `"${fileName}" has no default export, so it is not a route: move it out of the routes folder.`]);
+  if (!EXPO_SEGMENT.test(baseName(fileName))) problems.push([ROUTE_SEGMENT_RULE, `route "${fileName}" does not follow the naming pattern.`]);
   return problems;
 }
 
@@ -40,16 +40,16 @@ const FRAMEWORKS = {
 };
 
 /**
- * Os problemas de um arquivo dentro da pasta de rotas, como pares
- * [regra, mensagem]. `rest` são as partes do caminho abaixo da pasta.
+ * The problems of a file inside the routes folder, as [rule, message] pairs.
+ * `rest` is the path segments below the folder.
  */
 export function checkRouteFile(framework, rest, source) {
   const rules = FRAMEWORKS[framework];
   if (!rules) return [];
   const problems = [];
   for (const folder of rest.slice(0, -1)) {
-    if (folder.startsWith('_')) problems.push([APP_ROUTES_ONLY, `pasta privada "${folder}" na pasta de rotas: o código da rota mora fora dela.`]);
-    else if (!rules.segment.test(folder)) problems.push([ROUTE_SEGMENT_RULE, `segmento de rota "${folder}" fora do padrão.`]);
+    if (folder.startsWith('_')) problems.push([APP_ROUTES_ONLY, `private folder "${folder}" in the routes folder: the route's code lives outside it.`]);
+    else if (!rules.segment.test(folder)) problems.push([ROUTE_SEGMENT_RULE, `route segment "${folder}" does not follow the naming pattern.`]);
   }
   return [...problems, ...rules.checkFile(rest.at(-1), source)];
 }

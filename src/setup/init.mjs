@@ -1,12 +1,14 @@
 /**
- * Os dois passos da skill `setup`:
+ * The two steps of the `setup` skill:
  *
- * 1. `init`: lê o projeto e grava os rascunhos da régua (config,
- *    ARCHITECTURE.md, mapa de telas, complemento dos playbooks). A régua fica
- *    `pending` e o hook não cobra nada ainda; a skill revisa os rascunhos.
- * 2. `finalize`: mede e congela a dívida, confere que knip e jscpd rodam,
- *    instala os hooks do git (e, no modo time, CI, deny e AGENTS.md), liga a
- *    régua e assina o aceite. Depois disso, só `quality-kit rules accept`.
+ * 1. `init`: reads the project and writes the ruleset drafts (config,
+ *    ARCHITECTURE.md, screen map, playbooks supplement) in the project's
+ *    language. The ruleset stays `pending` and the hook enforces nothing yet;
+ *    the skill reviews the drafts.
+ * 2. `finalize`: measures and freezes the debt, checks that knip and jscpd
+ *    run, installs the git hooks (and, in team mode, CI, deny list and
+ *    AGENTS.md), turns the ruleset on and signs the acceptance. After that,
+ *    only `quality-kit rules accept`.
  */
 
 import { existsSync, writeFileSync } from 'node:fs';
@@ -21,13 +23,14 @@ import { ensureDir, locateProject, rulesDirFor } from '../project.mjs';
 import { freezeDebt } from './baseline.mjs';
 import { buildConfig } from './config-builder.mjs';
 import { detect } from './detect.mjs';
-import { architectureDoc, featureMapDoc, LINT_EXTRA_TEMPLATE, playbooksDoc } from './docs.mjs';
+import { architectureDoc, featureMapDoc, lintExtraTemplate, playbooksDoc } from './docs.mjs';
+import { languageOf } from './language.mjs';
 import { installHooks } from './githooks.mjs';
 import { writeTeamFiles } from './team.mjs';
 
 export class AlreadyActiveError extends Error {
   constructor(rulesDir) {
-    super(`O quality-kit já está ligado neste projeto (${rulesDir}). Mudar a régua é decisão humana: edite e rode \`quality-kit rules accept\` num terminal.`);
+    super(`The quality-kit is already on in this project (${rulesDir}). Changing the ruleset is a human decision: edit it and run \`quality-kit rules accept\` in a terminal.`);
   }
 }
 
@@ -43,26 +46,26 @@ export function initProject(cwd, answers) {
   const project = locateProject(cwd);
   assertNotActive(project);
   const detection = detect(project.repo);
-  const config = buildConfig(detection, answers);
+  const config = { ...buildConfig(detection, answers), language: languageOf(answers) };
   const rulesDir = ensureDir(rulesDirFor(project, answers.mode));
   writeJson(join(rulesDir, 'config.json'), config);
   writeFileSync(join(rulesDir, 'ARCHITECTURE.md'), architectureDoc(config));
   writeFileSync(join(rulesDir, 'FEATURE_MAP.md'), featureMapDoc(config, listFiles(project.repo), answers.screens ?? []));
   writeFileSync(join(rulesDir, 'PLAYBOOKS.md'), playbooksDoc(detection, config));
-  if (!existsSync(join(rulesDir, 'lint-extra.cjs'))) writeFileSync(join(rulesDir, 'lint-extra.cjs'), LINT_EXTRA_TEMPLATE);
+  if (!existsSync(join(rulesDir, 'lint-extra.cjs'))) writeFileSync(join(rulesDir, 'lint-extra.cjs'), lintExtraTemplate(config));
   return { rulesDir, detection, config };
 }
 
-/** knip e jscpd precisam rodar no projeto; se não rodam, saem da régua com o motivo. */
+/** knip and jscpd have to run in the project; if they do not, they leave the ruleset with the reason. */
 async function probeTools(project, config) {
   const changes = { base: 'HEAD', changed: [], added: [] };
   const notes = [];
   for (const [check, probe] of [['knip', deadCodeProblem], ['jscpd', duplicationProblem]]) {
     if (!config.checks?.[check]) continue;
     const problem = await probe({ project, config, changes });
-    if (problem?.includes('não rodou')) {
+    if (problem?.includes('failed to run')) {
       config.checks[check] = false;
-      notes.push(`${check} desligado: não rodou neste projeto.\n${problem.split('\n').slice(1, 6).join('\n')}`);
+      notes.push(`${check} turned off: it failed to run in this project.\n${problem.split('\n').slice(1, 6).join('\n')}`);
     }
   }
   return notes;
@@ -72,12 +75,12 @@ function hooksDir(repo) {
   return git(repo, 'rev-parse', '--git-path', 'hooks');
 }
 
-/** Só os hooks que a régua liga (`off` não instala). */
+/** Only the hooks the ruleset turns on (`off` is not installed). */
 export function hookNames(hooks) {
   return [['pre-commit', hooks.preCommit], ['pre-push', hooks.prePush]].filter(([, profile]) => profile && profile !== 'off').map(([name]) => name);
 }
 
-function installGitHooks(project, mode, names) {
+function installGitHooks(project, mode, names, language) {
   const configured = (() => {
     try {
       return git(project.repo, 'config', '--get', 'core.hooksPath');
@@ -88,12 +91,12 @@ function installGitHooks(project, mode, names) {
   if (mode === 'team') {
     const dir = configured && !configured.startsWith('/') ? configured : '.githooks';
     if (!configured) git(project.repo, 'config', 'core.hooksPath', dir);
-    return { installed: installHooks(join(project.repo, dir), names), note: configured ? null : `core.hooksPath apontado para ${dir} (cada clone precisa do mesmo: ponha \`git config core.hooksPath ${dir}\` no script de preparo).` };
+    return { installed: installHooks(join(project.repo, dir), names, language), note: configured ? null : `core.hooksPath set to ${dir} (every clone needs the same: put \`git config core.hooksPath ${dir}\` in the setup script).` };
   }
   const dir = join(project.repo, hooksDir(project.repo));
   const tracked = listFiles(project.repo).some((file) => join(project.repo, file).startsWith(`${dir}/`));
-  if (tracked) return { installed: [], note: `core.hooksPath aponta para uma pasta versionada (${dir}): no modo local o kit não mexe nela. Chame \`quality-kit git-hook pre-push\` de lá, se quiser.` };
-  return { installed: installHooks(dir, names), note: null };
+  if (tracked) return { installed: [], note: `core.hooksPath points to a versioned folder (${dir}): in local mode the kit does not touch it. Call \`quality-kit git-hook pre-push\` from there, if you want.` };
+  return { installed: installHooks(dir, names, language), note: null };
 }
 
 function debtSummary(state) {
@@ -107,12 +110,12 @@ function debtSummary(state) {
 
 export async function finalizeProject(cwd) {
   const project = locateProject(cwd);
-  if (!project.mode) throw new Error('Rode `quality-kit init` antes (a skill `setup` faz os dois).');
+  if (!project.mode) throw new Error('Run `quality-kit init` first (the `setup` skill does both).');
   assertNotActive(project);
   const config = JSON.parse(JSON.stringify(loadConfig(project.rulesDir)));
   const notes = await probeTools(project, config);
   const debt = await freezeDebt(project, config);
-  const hooks = installGitHooks(project, project.mode, hookNames(config.hooks));
+  const hooks = installGitHooks(project, project.mode, hookNames(config.hooks), languageOf(config));
   const teamFiles = project.mode === 'team' ? writeTeamFiles(project.repo, config) : [];
   writeJson(join(project.rulesDir, 'config.json'), { ...config, status: 'active' });
   const active = loadConfig(project.rulesDir);

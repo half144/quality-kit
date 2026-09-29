@@ -1,4 +1,4 @@
-/** Só os testes ligados aos arquivos tocados, com o runner que o workspace usa. */
+/** Only the tests related to the touched files, with the runner the workspace uses. */
 
 import { existsSync } from 'node:fs';
 import { basename, dirname, extname, join } from 'node:path';
@@ -9,7 +9,7 @@ import { run } from '../run.mjs';
 const TEST_OUTPUT_TAIL = 6000;
 const IS_TEST = /\.(test|spec)\.[cm]?[jt]sx?$/;
 
-/** Os testes do runner `node --test`: os tocados e os que moram ao lado de um tocado. */
+/** Tests for the `node --test` runner: the touched ones and those next to a touched file. */
 export function nodeTestFiles(files, exists) {
   const siblings = files
     .filter((file) => !IS_TEST.test(file))
@@ -18,7 +18,7 @@ export function nodeTestFiles(files, exists) {
   return [...new Set([...files.filter((file) => IS_TEST.test(file)), ...siblings])];
 }
 
-/** O comando que roda os testes ligados aos arquivos, ou null se não há o que rodar. */
+/** The command that runs the tests related to the files, or null if there is nothing to run. */
 export function testCommand({ repo, workspace, files, exists = existsSync }) {
   const { test } = workspace;
   const cwd = join(repo, workspace.dir);
@@ -38,7 +38,7 @@ export function testCommand({ repo, workspace, files, exists = existsSync }) {
 export async function testsProblem({ project }, { workspace, files }) {
   const command = testCommand({ repo: project.repo, workspace, files });
   if (!command) return null;
-  if (!command.bin) return `Testes em ${workspace.dir || 'raiz'}: o runner ${workspace.test} não está instalado no projeto (rode a instalação de dependências dele).`;
+  if (!command.bin) return `Tests in ${workspace.dir || 'root'}: the ${workspace.test} runner is not installed in the project (install its dependencies).`;
   const { status, output } = await run(command.bin, command.args, { cwd: join(project.repo, workspace.dir) });
-  return status === 0 ? null : `Testes em ${workspace.dir || 'raiz'}:\n${output.slice(-TEST_OUTPUT_TAIL)}`;
+  return status === 0 ? null : `Tests in ${workspace.dir || 'root'}:\n${output.slice(-TEST_OUTPUT_TAIL)}`;
 }

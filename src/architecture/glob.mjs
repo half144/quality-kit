@@ -1,4 +1,4 @@
-/** Glob mínimo para a config: `**`, `*`, `?` e `{a,b}`. Caminhos sempre com `/`. */
+/** Minimal glob for the config: `**`, `*`, `?` and `{a,b}`. Paths always use `/`. */
 
 const cache = new Map();
 

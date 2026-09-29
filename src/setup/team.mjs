@@ -1,6 +1,7 @@
 /**
- * O que só o modo time gera no repo: o passo de CI, o deny do Claude Code em
- * `.claude/settings.json` e o trecho do AGENTS.md que o Codex lê.
+ * What only team mode writes into the repo: the CI step, the Claude Code deny
+ * list in `.claude/settings.json` and the AGENTS.md snippet Codex reads. The
+ * workflow comments and the snippet follow the project's language.
  */
 
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -8,6 +9,8 @@ import { dirname, join } from 'node:path';
 
 import { ensureDir } from '../project.mjs';
 import { KIT_ROOT, kitVersion } from '../runtime.mjs';
+import { docText } from './doc-text.mjs';
+import { languageOf } from './language.mjs';
 
 const START = '<!-- quality-kit:start -->';
 const END = '<!-- quality-kit:end -->';
@@ -37,12 +40,11 @@ function installStep(install) {
   return `      - uses: actions/setup-node@v4\n        with:\n          node-version: 22\n      - run: ${install.run}`;
 }
 
-export function workflowSource(ci, version = kitVersion()) {
+export function workflowSource(ci, version = kitVersion(), language = 'en') {
+  const { workflow } = docText(language);
   return `name: quality-kit
 
-# O gate do quality-kit no PR: os mesmos checks do hook do Claude e dos hooks
-# do git, nos arquivos que o PR toca. Mudança na régua (.quality/) só passa com
-# o rótulo \`regua-aprovada\`, posto por quem revisa.
+${workflow.comment}
 on:
   pull_request:
 
@@ -54,7 +56,7 @@ jobs:
         with:
           fetch-depth: 0
 ${installStep(ci.install)}
-      - name: Instalar o quality-kit
+      - name: ${workflow.installStep}
         run: |
           git clone --depth 1 --branch v${version} ${KIT_REPO} "$RUNNER_TEMP/quality-kit"
           npm ci --prefix "$RUNNER_TEMP/quality-kit" --no-audit --no-fund
@@ -87,14 +89,16 @@ function writeFile(path, content) {
   writeFileSync(path, content);
 }
 
-/** O trecho do AGENTS.md com os caminhos dos documentos deste projeto. */
+const SNIPPET_FILES = { en: 'AGENTS.snippet.md', 'pt-BR': 'AGENTS.snippet.pt-BR.md' };
+
+/** The AGENTS.md snippet, in the project's language, with the paths of this project's documents. */
 export function agentsSnippet(config) {
-  return readFileSync(join(KIT_ROOT, 'templates', 'AGENTS.snippet.md'), 'utf8')
+  return readFileSync(join(KIT_ROOT, 'templates', SNIPPET_FILES[languageOf(config)]), 'utf8')
     .replace('{architecture}', config.docs?.architecture ?? '.quality/ARCHITECTURE.md')
     .replace('{map}', config.docs?.map ?? '.quality/FEATURE_MAP.md');
 }
 
-/** Grava os arquivos do modo time e devolve os caminhos. */
+/** Writes the team mode files and returns their paths. */
 export function writeTeamFiles(repo, config) {
   const settingsPath = join(repo, '.claude', 'settings.json');
   const agentsPath = join(repo, 'AGENTS.md');
@@ -102,6 +106,6 @@ export function writeTeamFiles(repo, config) {
   const settings = existsSync(settingsPath) ? JSON.parse(readFileSync(settingsPath, 'utf8')) : {};
   writeFile(settingsPath, `${JSON.stringify(mergeDeny(settings), null, 2)}\n`);
   writeFile(agentsPath, mergeAgents(existsSync(agentsPath) ? readFileSync(agentsPath, 'utf8') : null, agentsSnippet(config)));
-  writeFile(workflowPath, workflowSource(config.ci));
+  writeFile(workflowPath, workflowSource(config.ci, kitVersion(), languageOf(config)));
   return [settingsPath, agentsPath, workflowPath];
 }

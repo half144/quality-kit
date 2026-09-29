@@ -1,9 +1,29 @@
 {
   "name": "quality-kit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Travas mecânicas e playbooks para agentes de código entregarem com qualidade em projetos JS/TS.",
+  "description": "Mechanical guards and playbooks that make coding agents ship quality work in JS/TS projects.",
+  "keywords": [
+    "quality",
+    "gate",
+    "hooks",
+    "eslint",
+    "typescript",
+    "playbooks",
+    "agents",
+    "claude-code",
+    "codex"
+  ],
+  "author": {
+    "name": "half144",
+    "url": "https://github.com/half144"
+  },
   "license": "MIT",
+  "homepage": "https://github.com/half144/quality-kit",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/half144/quality-kit.git"
+  },
   "type": "module",
   "bin": {
     "quality-kit": "bin/quality-kit.mjs"

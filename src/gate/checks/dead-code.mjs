@@ -1,7 +1,7 @@
 /**
- * Código morto (knip) e duplicado (jscpd), recortados para o que a branch
- * trouxe: o knip olha o repo inteiro e só vale o que caiu nos arquivos
- * tocados; o jscpd só reprova o clone que a base não tinha.
+ * Dead code (knip) and duplicated code (jscpd), narrowed to what the branch
+ * introduced: knip scans the whole repo and only what lands in touched files
+ * counts; jscpd only fails clones the base did not have.
  */
 
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
@@ -36,10 +36,10 @@ export async function deadCodeProblem({ project, config, changes }) {
   const configPath = knipConfigPath(project, config);
   const runs = await Promise.all(modes.map((production) => run(depBin('knip'), knipArgs({ production, configPath }), { cwd: project.repo })));
   const failed = runs.find(({ status }) => status !== 0);
-  if (failed) return `O knip não rodou (desligue \`checks.knip\` na régua se o projeto não suporta):\n${failed.output.slice(-3000)}`;
+  if (failed) return `knip failed to run (disable \`checks.knip\` in the ruleset if the project does not support it):\n${failed.output.slice(-3000)}`;
   const packages = branchPackages(project.repo, changes.base, changes.changed);
   const issues = new Set(runs.flatMap(({ stdout }) => knipIssuesIn(JSON.parse(stdout), changes.changed, packages)));
-  return listing('Código morto nos arquivos da branch (knip; o que só teste usa também conta)', [...issues]);
+  return listing('Dead code in the branch files (knip; code used only by tests also counts)', [...issues]);
 }
 
 export function jscpdArgs({ base, output, config, hasProjectConfig }) {
@@ -55,6 +55,6 @@ export async function duplicationProblem({ project, config, changes }) {
   const reportFile = join(output, 'jscpd-report.json');
   const clones = status === 0 && existsSync(reportFile) ? newClones(JSON.parse(readFileSync(reportFile, 'utf8')), project.repo) : null;
   rmSync(output, { recursive: true, force: true });
-  if (clones === null) return `O jscpd não rodou:\n${log.slice(-3000)}`;
-  return listing('Código duplicado que a base não tinha (jscpd): extraia para um lugar só', clones);
+  if (clones === null) return `jscpd failed to run:\n${log.slice(-3000)}`;
+  return listing('Duplicated code the base did not have (jscpd): extract it to a single place', clones);
 }

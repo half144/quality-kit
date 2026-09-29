@@ -1,101 +1,117 @@
 # quality-kit
 
-Um plugin que monta, em qualquer projeto JS/TS existente, um ambiente onde
-agentes de código são **obrigados** a entregar com qualidade. Traz as skills
-(setup, playbooks, verify) e, diferente do [pstack](https://github.com/JoshueOsuna/pstack),
-as **travas mecânicas**: o agente não encerra o turno com o gate vermelho e não
-consegue afrouxar a régua sozinho.
+A plugin that turns any existing JS/TS project into an environment where
+coding agents are **forced** to ship quality work. It brings the skills
+(setup, playbooks, verify) and, unlike [pstack](https://github.com/JoshueOsuna/pstack),
+the **mechanical guards**: the agent cannot end its turn with the gate red and
+cannot loosen the ruleset on its own.
 
-## A escada de confiança
+## The trust ladder
 
-A ideia é a de Lauren Tan: cada degrau pega o que o anterior deixa passar.
+The idea comes from Lauren Tan: each rung catches what the previous one lets
+through.
 
-1. **A estrutura impede o erro.** Um checker de arquitetura configurável
-   (pastas, camadas, direção dos imports, pasta de rotas do framework, nomes).
-2. **Análise estática.** Lint com tipos e zero warning (preset rígido, com as
-   regras travadas contra `eslint-disable`), TypeScript estrito, testes ligados
-   aos arquivos tocados, teste ao lado de arquivo novo com lógica, knip e jscpd.
-3. **Método e prova em runtime.** Playbooks com um roteador (bug-fix, feature,
-   refactor, perf, investigation) e o `verify`, que abre as telas afetadas em
-   desktop e celular com Playwright e grava a prova que o gate confere.
+1. **Structure prevents the mistake.** A configurable architecture checker
+   (folders, layers, import direction, the framework's routes folder, names).
+2. **Static analysis.** Type-aware lint with zero warnings (a strict preset,
+   with its rules locked against `eslint-disable`), strict TypeScript, tests
+   linked to the touched files, a test next to every new file with logic, knip
+   and jscpd.
+3. **Method and runtime proof.** Playbooks behind a router (bug-fix, feature,
+   refactor, perf, investigation) and `verify`, which opens the affected
+   screens on desktop and mobile with Playwright and records the proof the
+   gate checks.
 
-## Instalação
+## Installation
 
-No Claude Code:
+In Claude Code:
 
 ```
 /plugin marketplace add half144/quality-kit
 /plugin install quality-kit@quality-kit
 ```
 
-Depois, dentro do projeto: "monta o quality-kit neste projeto" (skill `setup`).
-Ela roda `quality-kit install` uma vez por máquina: as dependências (eslint,
-typescript-eslint, knip, jscpd, playwright) ficam em `~/.quality-kit/runtime`,
-nunca no projeto. Dentro do Claude Code o plugin já põe `quality-kit` no PATH;
-no seu terminal, ponha `~/.quality-kit/bin` no PATH.
+Then, inside the project: "set up the quality-kit in this project" (the
+`setup` skill). It runs `quality-kit install` once per machine: the
+dependencies (eslint, typescript-eslint, knip, jscpd, playwright) live in
+`~/.quality-kit/runtime`, never in the project. Inside Claude Code the plugin
+already puts `quality-kit` on the PATH; in your own terminal, add
+`~/.quality-kit/bin` to the PATH.
 
-No Codex: `codex plugin marketplace add half144/quality-kit` e `codex plugin add quality-kit@quality-kit` (o catálogo está em
-`.agents/plugins/marketplace.json` e as skills em `skills/`, no formato que o
-Codex lê).
+In Codex: `codex plugin marketplace add half144/quality-kit` and
+`codex plugin add quality-kit@quality-kit` (the catalog is in
+`.agents/plugins/marketplace.json` and the skills in `skills/`, in the format
+Codex reads).
 
-## Os dois modos
+## Language
 
-| | Local | Time |
+The kit is in English. The files `setup` writes into your project
+(ARCHITECTURE.md, the screen map, PLAYBOOKS.md, the AGENTS.md snippet, the
+workflow and hook comments) follow the project's language: the skill reads the
+README and the existing docs, and asks when it cannot tell. English (`en`) and
+Brazilian Portuguese (`pt-BR`) are supported.
+
+## The two modes
+
+| | Local | Team |
 | --- | --- | --- |
-| Onde mora a régua | `~/.quality-kit/projects/<id>/` | `.quality/` no repo |
-| O repo muda? | Não (`git status` limpo) | Sim, num PR |
-| Lint | Config do kit por cima da do projeto | Igual, ou o preset do próprio projeto |
-| TS estrito | Flags na linha de comando do `tsc` | Igual |
-| Hooks do git | `.git/hooks` (não sobe) | `.githooks/` versionado |
-| CI | Nenhum | `.github/workflows/quality.yml` |
-| Deny do Claude | Só a guarda do plugin | Guarda + `.claude/settings.json` |
+| Where the ruleset lives | `~/.quality-kit/projects/<id>/` | `.quality/` in the repo |
+| Does the repo change? | No (`git status` stays clean) | Yes, in a PR |
+| Lint | The kit's config on top of the project's | Same, or the project's own preset |
+| Strict TS | Flags on the `tsc` command line | Same |
+| Git hooks | `.git/hooks` (never pushed) | Versioned `.githooks/` |
+| CI | None | `.github/workflows/quality.yml` |
+| Claude deny list | Only the plugin guard | Guard + `.claude/settings.json` |
 
-Nos dois, o gate só cobra o que foi tocado em relação à base: a dívida de
-hoje fica congelada (lint, tsc, arquitetura) e só encolhe; o código novo nasce
-limpo.
+In both, the gate only checks what was touched relative to the base: today's
+debt is frozen (lint, tsc, architecture) and can only shrink; new code is born
+clean.
 
-## O que cada trava faz
+## What each guard does
 
-- **Gate (`quality-kit gate`).** Um comando só, chamado pelo hook
-  Stop/SubagentStop, pelos hooks do git e pelo CI. Roda nos arquivos tocados:
-  arquitetura, lint com tipos, typecheck estrito, testes ligados, teste ao
-  lado de arquivo novo, catraca da dívida, knip, jscpd e a prova do `verify`
-  quando mudou tela. Reprovou, o Claude Code não deixa o agente parar e
-  devolve o relatório do que corrigir.
-- **Trava de integridade.** O gate guarda, assinado com uma chave desta
-  máquina, o hash da régua (config, regras extras, arquivos protegidos) e a
-  dívida aceita. Régua alterada reprova com "a régua foi alterada; mudança de
-  régua é decisão humana: rode `quality-kit rules accept`". Esse comando só
-  roda num terminal de verdade, fora de agente e de hook. No modo time vale
-  também a régua da base (a que passou pela revisão do merge), e o CI só aceita
-  régua nova com o rótulo `regua-aprovada` no PR.
-- **Guarda (PreToolUse).** Tira do alcance do agente a chave, os aceites, o
-  código do kit, `rules accept`, `--suppress-all` e `--no-verify`.
-- **Hooks do git.** `pre-commit` e `pre-push` rodam o perfil rápido
-  (estrutura, teste ao lado, dívida). Servem ao Codex, que não tem hook de Stop.
-- **CI (modo time).** O gate inteiro no PR, com a mesma versão do kit.
+- **Gate (`quality-kit gate`).** A single command, called by the
+  Stop/SubagentStop hook, by the git hooks and by CI. It runs on the touched
+  files: architecture, type-aware lint, strict typecheck, linked tests, a test
+  next to each new file, the debt ratchet, knip, jscpd and the `verify` proof
+  when a screen changed. When it fails, Claude Code does not let the agent
+  stop and hands back the report of what to fix.
+- **Integrity lock.** The gate stores, signed with a key from this machine,
+  the hash of the ruleset (config, extra rules, protected files) and the
+  accepted debt. A changed ruleset fails with "the ruleset was changed; a
+  ruleset change is a human decision: run `quality-kit rules accept`". That
+  command only runs in a real terminal, outside any agent or hook. In team
+  mode the base branch's ruleset (the one that went through merge review)
+  also counts, and CI only accepts a new ruleset when the PR has the
+  `regua-aprovada` label.
+- **Guard (PreToolUse).** Keeps out of the agent's reach the key, the
+  acceptances, the kit's code, `rules accept`, `--suppress-all` and
+  `--no-verify`.
+- **Git hooks.** `pre-commit` and `pre-push` run the fast profile (structure,
+  colocated tests, debt). They serve Codex, which has no Stop hook.
+- **CI (team mode).** The full gate on the PR, pinned to the same kit version.
 
 ## Skills
 
-`setup` (monta tudo e congela a dívida), `task` (o roteador) e os playbooks
-`bug-fix`, `feature`, `refactor`, `perf`, `investigation`; `verify` (prova na
-tela), `map` (mapa de telas e checker em dia) e `gardener` (o anti-padrão que
-volta vira regra, com o código corrigido).
+`setup` (sets everything up and freezes the debt), `task` (the router) and the
+playbooks `bug-fix`, `feature`, `refactor`, `perf`, `investigation`; `verify`
+(on-screen proof), `map` (keeps the screen map and the checker current) and
+`gardener` (an anti-pattern that comes back becomes a rule, with the code
+fixed).
 
 ## Codex
 
-O Codex lê as mesmas skills e o trecho que o setup injeta no `AGENTS.md`. Ele
-não tem hook de Stop, então para ele as travas são os hooks do git e o CI; o
-agente é instruído a rodar `quality-kit gate` antes de encerrar. O próximo
-passo é um plugin do Paseo que dispare o gate no fim do turno do Codex.
+Codex reads the same skills and the snippet `setup` injects into `AGENTS.md`.
+It has no Stop hook, so for Codex the guards are the git hooks and CI; the
+agent is told to run `quality-kit gate` before finishing. The next step is a
+Paseo plugin that fires the gate at the end of each Codex turn.
 
-## O limite
+## The limit
 
-A trava é contra o atalho do agente, não contra quem tem a máquina. O dono da
-máquina sempre pode desligar o plugin, apagar a régua ou aceitar qualquer
-coisa; o agente não. No modo time, proteja `.quality/` com CODEOWNERS para a
-mudança de régua passar por revisão.
+The guard is against the agent's shortcut, not against whoever owns the
+machine. The machine owner can always turn the plugin off, delete the ruleset
+or accept anything; the agent cannot. In team mode, protect `.quality/` with
+CODEOWNERS so ruleset changes go through review.
 
-## Licença
+## License
 
 MIT.

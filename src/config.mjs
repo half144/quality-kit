@@ -1,4 +1,4 @@
-/** A config do projeto (`config.json` na pasta da régua), com os padrões do kit. */
+/** The project config (`config.json` in the ruleset folder), with the kit defaults. */
 
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -56,7 +56,7 @@ export function loadConfig(rulesDir) {
   return withDefaults(JSON.parse(readFileSync(join(rulesDir, 'config.json'), 'utf8')));
 }
 
-/** O workspace de um arquivo do repo: o mais específico que o contém. */
+/** The workspace of a repo file: the most specific one that contains it. */
 export function workspaceOf(workspaces, file) {
   return workspaces.filter((workspace) => file.startsWith(workspace.dir)).sort((a, b) => b.dir.length - a.dir.length)[0] ?? null;
 }
@@ -65,7 +65,7 @@ export function slug(dir) {
   return dir === '' ? 'root' : dir.replace(/\/$/, '').replace(/[/\\]/g, '__');
 }
 
-/** Onde mora o arquivo de supressões de um workspace. */
+/** Where a workspace's suppressions file lives. */
 export function suppressionsPath({ repo, rulesDir }, workspace) {
   if (workspace.lint === 'project') return join(repo, workspace.dir, 'eslint-suppressions.json');
   return join(rulesDir, 'baseline', 'eslint', `${slug(workspace.dir)}.json`);
@@ -80,8 +80,8 @@ export function architectureBaselinePath(rulesDir) {
 }
 
 /**
- * Onde moram o texto da arquitetura e o mapa de telas: na pasta da régua, ou
- * num caminho do repo (`docs`), para o projeto que já tem os dele.
+ * Where the architecture text and the screen map live: in the ruleset folder,
+ * or at a repo path (`docs`) for projects that already have their own.
  */
 export function docPath(project, config, name) {
   const inRepo = config.docs[name];

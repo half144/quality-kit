@@ -1,7 +1,8 @@
 /**
- * A prova na tela como contrato entre o `quality-kit verify` e o gate: quais
- * telas a mudança obriga a abrir, a impressão digital da árvore que foi aberta
- * e o que falta no relatório. O gate só lê: nunca abre navegador.
+ * On-screen proof as the contract between `quality-kit verify` and the gate:
+ * which screens the change requires opening, the fingerprint of the tree that
+ * was opened and what the report is missing. The gate only reads: it never
+ * opens a browser.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -27,7 +28,7 @@ export function loadScreens(project, config, apps) {
   return existsSync(path) ? parseFeatureMap(readFileSync(path, 'utf8'), apps) : [];
 }
 
-/** O `git write-tree` do índice mais a worktree, num índice temporário: o índice de verdade não muda. */
+/** `git write-tree` of the index plus the worktree, in a temporary index: the real index is left untouched. */
 export function treeHash(repo) {
   const dir = mkdtempSync(join(tmpdir(), 'quality-kit-index-'));
   const index = join(dir, 'index');
@@ -56,7 +57,7 @@ export function changedTargets(project, config, files) {
   return targetsOf(affectedScreens(apps, loadScreens(project, config, apps), files, importersFinder(project.repo)));
 }
 
-/** A mudança mexe em tela? Se sim, que alvos o relatório precisa ter aprovados. */
+/** Does the change touch a screen? If so, which targets the report must have passed. */
 export function requiredProof(project, config, files) {
   const apps = normalizeApps(config.verify);
   if (!files.some((file) => isUiFile(apps, file))) return [];
@@ -79,27 +80,27 @@ function passed(report, target) {
 }
 
 function reportGap(apps, report, tree, targets) {
-  if (!report) return 'Não há relatório do verify para este estado.';
-  if (report.tree !== tree) return `O relatório do verify é de outro estado dos arquivos (árvore ${report.tree}, agora ${tree}): algo mudou depois do verify.`;
+  if (!report) return 'There is no verify report for this state.';
+  if (report.tree !== tree) return `The verify report is for a different state of the files (tree ${report.tree}, now ${tree}): something changed after verify ran.`;
   const missing = targets.filter((target) => !passed(report, target));
   if (missing.length === 0) return null;
-  return `O relatório do verify não aprova, em desktop e celular: ${missing.map((target) => targetKey(apps, target)).join(', ')}.`;
+  return `The verify report does not pass, on desktop and mobile: ${missing.map((target) => targetKey(apps, target)).join(', ')}.`;
 }
 
-/** O problema para o gate, ou null quando a prova está em dia. Puro. */
+/** The problem for the gate, or null when the proof is up to date. Pure. */
 export function proofProblem({ apps, report, tree, targets }) {
   if (targets.length === 0) return null;
   const gap = reportGap(apps, report, tree, targets);
   if (!gap) return null;
   return [
-    'Prova na tela: esta mudança mexe em tela, e build e teste verdes não provam que ela abre.',
+    'On-screen proof: this change touches a screen, and a green build and tests do not prove it opens.',
     gap,
-    `Telas afetadas (mapa de telas): ${targets.map((target) => targetKey(apps, target)).join(', ')}.`,
-    `Rode \`${VERIFY_COMMAND}\` e corrija o que ele reprovar. Ele abre cada tela em desktop e celular e grava o relatório; mude um arquivo depois e ele precisa rodar de novo.`,
+    `Affected screens (screen map): ${targets.map((target) => targetKey(apps, target)).join(', ')}.`,
+    `Run \`${VERIFY_COMMAND}\` and fix whatever it fails. It opens each screen on desktop and mobile and writes the report; change a file afterwards and it has to run again.`,
   ].join('\n');
 }
 
-/** Tela nova sem linha no mapa: sem ela, o verify não sabe abrir. */
+/** A new screen with no row in the map: without one, verify does not know how to open it. */
 export function mapProblem(project, config, changed) {
   const apps = normalizeApps(config.verify);
   const { missing } = mapGaps(apps, loadScreens(project, config, apps), listFiles(project.repo));
@@ -108,7 +109,7 @@ export function mapProblem(project, config, changed) {
     return changed.includes(app.routesDir + screen.file);
   });
   if (touched.length === 0) return null;
-  return `Tela sem linha no mapa de telas (${docPath(project, config, 'map')}): ${touched.map((screen) => `${screen.app} ${screen.file}`).join(', ')}. Use a skill \`map\` para acrescentar a rota e o caminho de demonstração.`;
+  return `Screen with no row in the screen map (${docPath(project, config, 'map')}): ${touched.map((screen) => `${screen.app} ${screen.file}`).join(', ')}. Use the \`map\` skill to add the route and the demo path.`;
 }
 
 export function proofCheck(project, config, changed, readState = () => ({ report: readReport(project), tree: treeHash(project.repo) })) {

@@ -20,7 +20,7 @@ function check(roots, files, sources = {}) {
   return checkRepository({ roots }, files, (file) => sources[file] ?? '').map(({ file, rule }) => `${rule} ${file}`);
 }
 
-test('glob: **, * e chaves', () => {
+test('glob: **, * and braces', () => {
   assert.ok(matchesAny('apps/web/src/app/x/page.tsx', ['**/src/app{,/**}']));
   assert.ok(matchesAny('apps/web/src/app', ['**/src/app{,/**}']));
   assert.ok(!matchesAny('apps/web/src/lib/a.ts', ['**/src/app{,/**}']));
@@ -28,14 +28,14 @@ test('glob: **, * e chaves', () => {
   assert.ok(!globToRegExp('src/*.ts').test('src/a/b.ts'));
 });
 
-test('pasta do topo fora do padrão e arquivo solto na raiz', () => {
+test('top-level folder outside the layout and stray file at the root', () => {
   assert.deepEqual(check([WEB], ['apps/web/src/utils/a.ts', 'apps/web/src/proxy.ts', 'apps/web/src/solto.ts']), [
     'top-folders apps/web/src/utils/a.ts',
     'root-files apps/web/src/solto.ts',
   ]);
 });
 
-test('naming por convenção e componente com convenção própria', () => {
+test('naming by convention, with components on their own convention', () => {
   const root = { path: 'src', naming: { files: 'camel', components: 'pascal', folders: 'kebab' } };
   assert.deepEqual(check([root], ['src/main-window/useThing.ts', 'src/main-window/Button.tsx', 'src/mainWindow/x.ts', 'src/a/button.tsx']), [
     'naming src/mainWindow/x.ts',
@@ -43,37 +43,37 @@ test('naming por convenção e componente com convenção própria', () => {
   ]);
 });
 
-test('sem convenção (any) aceita tudo', () => {
+test('no convention (any) accepts everything', () => {
   assert.deepEqual(check([{ path: 'src', naming: { files: 'any', components: 'any', folders: 'any' } }], ['src/Qualquer_Coisa/x-Y.ts']), []);
 });
 
-test('barril e __tests__ proibidos quando a régua pede', () => {
+test('barrels and __tests__ forbidden when the ruleset says so', () => {
   assert.deepEqual(check([WEB], ['apps/web/src/lib/index.ts', 'apps/web/src/lib/__tests__/a.test.ts']), [
     'no-barrel apps/web/src/lib/index.ts',
     'tests-colocated apps/web/src/lib/__tests__/a.test.ts',
   ]);
 });
 
-test('pasta de rotas do Next só aceita arquivo de rota', () => {
+test('the Next routes folder only accepts route files', () => {
   assert.deepEqual(check([WEB], ['apps/web/src/app/(grupo)/conta/page.tsx', 'apps/web/src/app/conta/card.tsx', 'apps/web/src/app/_x/page.tsx']), [
     'app-routes-only apps/web/src/app/conta/card.tsx',
     'app-routes-only apps/web/src/app/_x/page.tsx',
   ]);
 });
 
-test('rota do Expo Router precisa de default export', () => {
+test('an Expo Router route needs a default export', () => {
   const expo = { path: 'src', routes: { dir: 'app', framework: 'expo-router' } };
   const sources = { 'src/app/index.tsx': 'export default function A() {}', 'src/app/helper.ts': 'export const x = 1' };
   assert.deepEqual(check([expo], Object.keys(sources), sources), ['app-routes-only src/app/helper.ts']);
 });
 
-test('arquivo solto na feature vai para uma camada', () => {
+test('a stray file in a feature belongs in a layer', () => {
   assert.deepEqual(check([WEB], ['apps/web/src/features/conta/solto.ts', 'apps/web/src/features/conta/hooks/use-conta.ts']), [
     'feature-folders apps/web/src/features/conta/solto.ts',
   ]);
 });
 
-test('direção dos imports: feature não importa de outra, compartilhado não importa de feature, só rota importa de rota', () => {
+test('import direction: features do not import each other, shared code does not import features, only routes import routes', () => {
   const sources = {
     'apps/web/src/features/conta/hooks/use-conta.ts': "import { x } from '@/features/pagamento/utils/x';",
     'apps/web/src/lib/a.ts': "import { y } from '../features/conta/hooks/use-conta';",
@@ -87,12 +87,12 @@ test('direção dos imports: feature não importa de outra, compartilhado não i
   ]);
 });
 
-test('sub-feature não importa da irmã', () => {
+test('a sub-feature does not import from its sibling', () => {
   const sources = { 'apps/web/src/features/painel/fotos/components/a.tsx': "import b from '@/features/painel/video/components/b';" };
   assert.deepEqual(check([WEB], Object.keys(sources), sources), ['import-direction apps/web/src/features/painel/fotos/components/a.tsx']);
 });
 
-test('imports.forbid da config soma regra de caminho para caminho', () => {
+test('imports.forbid in the config adds path-to-path rules', () => {
   const root = { path: 'src', imports: { forbid: [{ from: 'components/**', to: 'stores/**', message: 'componente recebe estado por prop' }] } };
   const sources = { 'src/components/a.tsx': "import { s } from '../stores/s';" };
   const [violation] = checkRepository({ roots: [root] }, Object.keys(sources), (file) => sources[file]);
@@ -100,7 +100,7 @@ test('imports.forbid da config soma regra de caminho para caminho', () => {
   assert.match(violation.message, /componente recebe estado por prop/);
 });
 
-test('Convex: camelCase e raiz só com função registrada', () => {
+test('Convex: camelCase, and the root only holds registered functions', () => {
   const convex = { path: 'convex', kind: 'convex' };
   const sources = {
     'convex/events.ts': 'export const list = query({})',
@@ -115,7 +115,7 @@ test('Convex: camelCase e raiz só com função registrada', () => {
   ]);
 });
 
-test('tamanho de pasta: conta código, pula teste e pasta isenta', () => {
+test('folder size: counts code, skips tests and exempt folders', () => {
   const files = [...Array.from({ length: 3 }, (_, index) => `src/a/f${index}.ts`), 'src/a/f0.test.ts', ...Array.from({ length: 3 }, (_, index) => `src/app/f${index}.ts`)];
   assert.deepEqual(
     checkFolderSizes(files, { max: 2, scopes: ['src/**'], exempt: ['src/app{,/**}'] }).map(({ file }) => file),
@@ -123,7 +123,7 @@ test('tamanho de pasta: conta código, pula teste e pasta isenta', () => {
   );
 });
 
-test('violationsIn: só arquivo tocado, e tamanho de pasta só para quem acrescentou arquivo', () => {
+test('violationsIn: only touched files, and folder size only for whoever added a file', () => {
   const violations = [
     { file: 'src/a.ts', rule: 'naming' },
     { file: 'src/b.ts', rule: 'naming' },
