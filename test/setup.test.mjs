@@ -6,7 +6,7 @@ import { shapeOf, stackOf, workspacePatterns } from '../src/setup/detect.mjs';
 import { architectureDoc, featureMapDoc } from '../src/setup/docs.mjs';
 import { hookBlock, mergeHook } from '../src/setup/githooks.mjs';
 import { hookNames } from '../src/setup/init.mjs';
-import { DENY, mergeAgents, mergeDeny, workflowSource } from '../src/setup/team.mjs';
+import { agentsSnippet, DENY, mergeAgents, mergeDeny, workflowSource } from '../src/setup/team.mjs';
 import { flagsToOptions, overlaySource } from '../src/lint/overlay.mjs';
 import { parseFeatureMap } from '../src/verify/feature-map.mjs';
 import { normalizeApps } from '../src/verify/apps.mjs';
@@ -95,4 +95,8 @@ test('flags do tsc viram compilerOptions do tsconfig estrito do lint', () => {
 test('hook desligado na régua não é instalado', () => {
   assert.deepEqual(hookNames({ preCommit: 'off', prePush: 'fast' }), ['pre-push']);
   assert.deepEqual(hookNames({ preCommit: 'fast', prePush: 'full' }), ['pre-commit', 'pre-push']);
+});
+
+test('o trecho do AGENTS.md aponta para os documentos do projeto', () => {
+  assert.match(agentsSnippet({ docs: { architecture: 'docs/ARCHITECTURE.md', map: null } }), /`docs\/ARCHITECTURE\.md`[\s\S]*`\.quality\/FEATURE_MAP\.md`/);
 });

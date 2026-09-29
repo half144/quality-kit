@@ -87,8 +87,11 @@ function writeFile(path, content) {
   writeFileSync(path, content);
 }
 
-export function agentsSnippet() {
-  return readFileSync(join(KIT_ROOT, 'templates', 'AGENTS.snippet.md'), 'utf8');
+/** O trecho do AGENTS.md com os caminhos dos documentos deste projeto. */
+export function agentsSnippet(config) {
+  return readFileSync(join(KIT_ROOT, 'templates', 'AGENTS.snippet.md'), 'utf8')
+    .replace('{architecture}', config.docs?.architecture ?? '.quality/ARCHITECTURE.md')
+    .replace('{map}', config.docs?.map ?? '.quality/FEATURE_MAP.md');
 }
 
 /** Grava os arquivos do modo time e devolve os caminhos. */
@@ -98,7 +101,7 @@ export function writeTeamFiles(repo, config) {
   const workflowPath = join(repo, '.github', 'workflows', 'quality.yml');
   const settings = existsSync(settingsPath) ? JSON.parse(readFileSync(settingsPath, 'utf8')) : {};
   writeFile(settingsPath, `${JSON.stringify(mergeDeny(settings), null, 2)}\n`);
-  writeFile(agentsPath, mergeAgents(existsSync(agentsPath) ? readFileSync(agentsPath, 'utf8') : null, agentsSnippet()));
+  writeFile(agentsPath, mergeAgents(existsSync(agentsPath) ? readFileSync(agentsPath, 'utf8') : null, agentsSnippet(config)));
   writeFile(workflowPath, workflowSource(config.ci));
   return [settingsPath, agentsPath, workflowPath];
 }
