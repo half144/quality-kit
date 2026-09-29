@@ -91,6 +91,26 @@ ruleset. Nothing else to do.
 
 ## The daily workflow
 
+**You only call one skill.** `task` is the entry point; it chains the rest in
+order (playbook → `tiny-plan` → code → `evidence` → `ship`).
+
+```
+/quality-kit:task the host can't see how many guests confirmed
+```
+
+Describing the task in plain words usually triggers it too. What's left for
+you: say "ok" to the plan, look at the evidence, merge the PR.
+
+| Skill | Who calls it |
+| --- | --- |
+| `task` | **you**, for every piece of work |
+| `setup` | **you**, once per project |
+| `map`, `gardener` | **you**, now and then (new routes, a recurring anti-pattern) |
+| playbooks, `tiny-plan`, `verify`, `evidence`, `ship` | the agent, through `task` |
+
+You can call any of them directly (e.g. `/quality-kit:evidence` for extra
+screenshots), but you don't need to.
+
 ### 1. You ask for something
 
 The `task` skill routes the request to a playbook and copies its steps into the
