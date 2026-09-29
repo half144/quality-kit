@@ -21,7 +21,10 @@ screenshotted, then framed by cutaway (a browser window with the address, the
 drawn iPhone). The app starts with the ruleset's `verify.apps` command; if it
 is already running, pass `--origin http://127.0.0.1:3000`.
 
-Point at the change when it is small or the PR is about a defect:
+**Clean by default.** A new screen, a layout change or anything the reviewer
+sees at a glance goes without marks. Mark only when the eye would miss it: a
+bug repro (the wrong value on screen) or a one-element change lost in a busy
+page.
 
 ```
 quality-kit evidence still /painel --mark "[data-testid=total]" --actual "R$ 0,00" --expected "R$ 120,00"

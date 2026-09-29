@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.2
+
+- Evidence stills are clean by default: the skill marks the screen only when
+  the eye would miss the change (a bug repro, one element in a busy page).
+
 ## v0.3.1
 
 - cutaway is pinned to its `v0.2.0` release (the first tag with `frame` and

@@ -152,13 +152,14 @@ state of the files: edit again, prove again.
 ### 5. Evidence for the reviewer
 
 ```
-quality-kit evidence still /guests --mark "[data-testid=count]" --expected "the confirmed count"
+quality-kit evidence still /guests
 quality-kit evidence record /tmp/confirm-two-guests.json
 ```
 
-`still` screenshots each screen on desktop and phone, optionally marks the
-change (red outline and a caption with actual vs expected) and frames it as a
-browser window or a drawn iPhone. `record` turns a short plan of clicks into a
+`still` screenshots each screen on desktop and phone and frames it as a
+browser window or a drawn iPhone. Stills are clean by default; `--mark <css>`
+adds a red outline and an actual vs expected caption, for when the eye would
+miss the change (a bug repro, one element in a busy page). `record` turns a short plan of clicks into a
 video, for changes that are an interaction. Both are made with
 [cutaway](https://github.com/half144/cutaway), pinned inside the kit, and are
 valid only for the current state of the files.
