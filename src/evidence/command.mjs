@@ -23,7 +23,7 @@ import { captureStills } from './stills.mjs';
 
 const VALUE_FLAGS = new Set(['--origin', '--mark', '--actual', '--expected']);
 
-const USAGE = `Usage:
+export const USAGE = `Usage:
   quality-kit evidence still <path>... | --changed [--origin <url>] [--mark <css> [--actual <text>] [--expected <text>]]
   quality-kit evidence record <cutaway-plan.json> [--origin <url>]
   quality-kit evidence status | clear | doctor`;

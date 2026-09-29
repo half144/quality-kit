@@ -101,7 +101,7 @@ async function runChecks(project, apps, dir, targets) {
 
 export async function runVerify(project, config, argv) {
   const apps = normalizeApps(config.verify);
-  if (apps.length === 0) throw new Error('The ruleset has no `verify.apps`: run the `setup` skill (or `map`) to say how to start the app.');
+  if (apps.length === 0) throw new Error('The ruleset has no `verify.apps`: the owner runs the `setup` skill again (`/quality-kit:setup`) to say how to start the app.');
   const args = parseArgs(apps, argv);
   const tree = treeHash(project.repo);
   const targets = requestedTargets(project, config, apps, args);

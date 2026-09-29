@@ -23,6 +23,8 @@ import { prBody, prTitle } from './body.mjs';
 import { createPr, githubToken, pushBranch, repositoryId } from './github.mjs';
 import { uploadAll } from './upload.mjs';
 
+export const USAGE = 'Usage: quality-kit ship [--dry-run] [--title <text>] [--base <branch>]';
+
 function option(argv, name) {
   const index = argv.indexOf(name);
   return index === -1 ? undefined : argv[index + 1];

@@ -10,40 +10,63 @@ import { readFileSync } from 'node:fs';
 
 import { branchDir } from './branch/state.mjs';
 import { loadConfig } from './config.mjs';
-import { evidenceCommand } from './evidence/command.mjs';
+import { evidenceCommand, USAGE as EVIDENCE_USAGE } from './evidence/command.mjs';
 import { report, runGate } from './gate/gate.mjs';
 import { guardMain } from './gate/guard.mjs';
 import { hookMain } from './gate/hook.mjs';
 import { acceptRules, rebaseline, rulesStatus } from './integrity/accept.mjs';
-import { planCommand } from './plan/plan-command.mjs';
+import { planCommand, USAGE as PLAN_USAGE } from './plan/plan-command.mjs';
 import { locateProject } from './project.mjs';
 import { installKit } from './setup/install.mjs';
 import { detect } from './setup/detect.mjs';
 import { finalizeProject, initProject } from './setup/init.mjs';
 import { gitHook } from './setup/git-hook.mjs';
-import { runShip } from './ship/ship.mjs';
+import { runShip, USAGE as SHIP_USAGE } from './ship/ship.mjs';
 import { mapCommand } from './verify/map-command.mjs';
 import { createSpaServer } from './verify/static-server.mjs';
 import { runVerify } from './verify/verify.mjs';
 
-const HELP = `quality-kit <command>
+const HELP = `quality-kit <command>   (quality-kit <command> --help for one command)
 
   install                     installs the kit dependencies on this machine (once)
   detect                      reads the project (stack, monorepo, code shape) as JSON
   init --answers <file>       writes the ruleset drafts (called by the setup skill)
   finalize                    freezes the debt, installs the hooks and enables the ruleset
-  gate [--profile full|fast] [--base <ref>] [--ci] [--allow-regua-change]
+  gate [options]              runs the checks on what the branch changed
+                              [--profile full|fast] [--base <ref>] [--ci] [--allow-regua-change]
   verify <path>... | --changed | --all
-  plan write|show|approve     the branch's tiny plan (approve only after the owner's ok in chat)
-  evidence still|record ...   screenshots, framing and video for the PR (also status, clear, doctor)
-  ship [--dry-run]            opens the PR with the plan, the evidence and the gate summary
-  map [--write]               checks the screen map against the code routes
+                              opens the screens on desktop and mobile: the gate's runtime proof
+  plan write|show|status|approve
+                              the branch's tiny plan (approve only after the owner's ok in chat)
+  evidence still|record|status|clear|doctor
+                              screenshots, framing and video for the PR
+  ship [--dry-run]            opens (or updates) the PR with the plan, the evidence and the gate summary
+  map [--write]             checks the screen map against the code routes
   serve <folder> --port <n>   serves a static export as an SPA (for verify)
   paths                       where this project's ruleset and state live
   rules status                does the current ruleset match the accepted one?
   rules accept                accepts the current ruleset (humans only, at a terminal)
   baseline                    freezes the debt again (humans only, at a terminal)
   hook | guard | git-hook     hook entry points (Claude Code and git)`;
+
+const USAGES = { plan: PLAN_USAGE, evidence: EVIDENCE_USAGE, ship: SHIP_USAGE };
+
+/** One command's usage: its own, or its entries in the overview with the indented lines under them. Pure. */
+export function commandHelp(name) {
+  if (USAGES[name]) return USAGES[name];
+  const lines = HELP.split('\n');
+  const entries = [];
+  lines.forEach((line, index) => {
+    if (!line.startsWith(`  ${name} `)) return;
+    entries.push(`quality-kit ${line.trim()}`);
+    for (let next = index + 1; lines[next]?.startsWith('    '); next += 1) entries.push(`  ${lines[next].trim()}`);
+  });
+  return entries.length === 0 ? HELP : entries.join('\n');
+}
+
+function wantsHelp(argv) {
+  return argv.includes('--help') || argv.includes('-h');
+}
 
 function option(argv, name) {
   const index = argv.indexOf(name);
@@ -52,7 +75,7 @@ function option(argv, name) {
 
 function activeProject() {
   const project = locateProject(process.cwd());
-  if (!project.mode) throw new Error('quality-kit is not set up in this project: run the `setup` skill.');
+  if (!project.mode) throw new Error('quality-kit is not set up in this project: the owner runs the `setup` skill (`/quality-kit:setup`).');
   return { project, config: loadConfig(project.rulesDir) };
 }
 
@@ -126,6 +149,7 @@ export async function main(argv) {
   const [name, ...rest] = argv;
   const command = COMMANDS[name];
   if (!command) return print(HELP);
+  if (wantsHelp(rest)) return print(commandHelp(name));
   try {
     return await command(rest);
   } catch (error) {
