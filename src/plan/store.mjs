@@ -8,7 +8,8 @@ import { join } from 'node:path';
 
 import { readJson } from '../integrity/ruleset.mjs';
 import { ensureDir } from '../project.mjs';
-import { planErrors, planHash, planStatus } from './plan.mjs';
+import { planErrors } from './limits.mjs';
+import { planHash, planStatus } from './plan.mjs';
 
 export function planPath(dir) {
   return join(dir, 'plan.md');
@@ -32,7 +33,7 @@ export function readPlan(dir) {
 /** `changes`: the branch's change fingerprint now, so the Stop hook knows no code moved while the plan waits for the ok. */
 export function writePlan(dir, text, changes = null) {
   const errors = planErrors(text);
-  if (errors.length > 0) throw new Error(`Not a tiny plan:\n${errors.map((error) => `  ${error}`).join('\n')}`);
+  if (errors.length > 0) throw new Error(`Not a tiny plan:\n${errors.map((error) => `  ${error}`).join('\n')}\nFix what is listed and run \`quality-kit plan write\` again.`);
   ensureDir(dir);
   writeFileSync(planPath(dir), `${text.trim()}\n`);
   writeFileSync(writtenPath(dir), `${JSON.stringify({ changes }, null, 2)}\n`);

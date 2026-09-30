@@ -83,7 +83,7 @@ test('the gate fails a new file without a test, any, a loose type and a forbidde
   rmSync(join(repo, 'src/features/pagamento'), { recursive: true });
 });
 
-const PLAN = 'Goal: a helper for new numbers\nContext: none exists\nWhere: src/lib/nova.ts\nHow it works: returns one\nProof: its unit test';
+const PLAN = 'Goal: a helper for new numbers\nContext: none exists\nWhere:\n- src/lib/nova.ts\nHow it works: returns one\nProof: its unit test';
 
 test('the Stop hook asks for the owner-approved tiny plan once the branch changes code; git and CI do not', async () => {
   write('src/lib/um.ts', 'export function um(): number {\n  return 1;\n}\n');
