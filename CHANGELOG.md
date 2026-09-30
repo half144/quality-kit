@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.3.7
+
+- **Stills of a gated screen.** `quality-kit evidence still --plan
+  <file.json>` runs steps before the shot: a `url`, `steps` in the same
+  format as a video plan (click, type, press, wait, scroll, focus, upload,
+  with `expect`) and an optional `mark`. The steps run on desktop and phone;
+  `click` and `scroll` become `tap` and `swipe` on the phone, and the other
+  way round. A broken plan says which field to fix; a failing step says which
+  step. Before, a still only opened the URL, so a screen behind a code showed
+  the code screen, and agents recorded videos to get past it (minutes and
+  gigabytes for a picture). `still <path>` works as before; `--changed` still
+  opens screens without steps.
+- **Videos keep only the mp4.** A cutaway recording left its raw capture next
+  to the video: lossless frames (~550 MB for 5 s), timeline, camera track and
+  poster. They are deleted once the export succeeds; cutaway `render` cannot
+  re-export the take afterwards, which PR evidence never needs. Any `evidence`
+  command also trims finished takes that older versions left behind.
+
 ## v0.3.6
 
 - **The plan follows a renamed branch.** Paseo creates a worktree on a
