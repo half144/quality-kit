@@ -7,7 +7,8 @@ description: "Opens or updates the PR with `quality-kit ship`: the approved tiny
 
 1. **Commit** the work in small commits (the pre-commit hook runs the fast gate).
 2. **Preview:** `quality-kit ship --dry-run` prints the title (the plan's goal)
-   and the body: the plan, the evidence and the checks that passed. Read it.
+   and the body: the plan (the same markdown the owner approved in chat), the
+   evidence and the checks that passed. Read it.
 3. **If it refuses**, do what it says:
    - no approved plan: skill `tiny-plan`, and wait for the owner's ok;
    - evidence missing or stale: skill `evidence`;

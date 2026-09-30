@@ -35,7 +35,7 @@ along with the project's supplement, `PLAYBOOKS.md` in the ruleset folder
 - **A question** (explain, where is, why): the `investigation` playbook. No
   plan, no task list for a one-look answer, no evidence, no PR.
 - **A code change of any size**: the full flow below. For a one-line change
-  the plan is still five lines, just short ones; steps that don't apply are
+  the plan still has its five parts, just short ones; steps that don't apply are
   marked `skipped: <reason>`, and evidence only exists if a screen changed.
 - **Kit not set up here** (`quality-kit paths` shows `"mode": null`): follow
   the playbook without plan, evidence or ship, and mention that the owner can

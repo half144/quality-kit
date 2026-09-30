@@ -132,15 +132,24 @@ agent's task list:
 
 ### 2. The agent writes a tiny plan and waits for your ok
 
-Before any code, five lines you can read in a few seconds:
+Before any code, a plan you can read in a few seconds, shown in chat as
+markdown:
 
-```
-Goal: the host sees how many guests confirmed
-Context: the guest page only says "nobody confirmed", with no way to change it
-Where: src/features/guests/guest-list.tsx, the /guests screen
-How it works: a "Confirm" button on each guest adds one to the count.
-Proof: desktop and phone stills of /guests, a short video confirming two guests
-```
+> **Goal:** the host sees how many guests confirmed
+>
+> **Context:** the guest page only says "nobody confirmed", with no way to change it.
+>
+> **Where**
+> - `guest-list.tsx`: a "Confirm" button on each guest
+> - `use-guests.ts`: the count of confirmed guests
+>
+> **How it works:** a "Confirm" button on each guest adds one to the count.
+>
+> **Proof:** stills of /guests (desktop and phone), a short video confirming two guests
+
+`quality-kit plan write` refuses a text wall: at most 15 lines, 120
+characters per line, 1 to 5 bullets under Where and 2 sentences of Context,
+and the error names the field to cut.
 
 The agent saves it (`quality-kit plan write`), shows it and stops. You answer
 "ok" (or ask for changes); only then it runs `quality-kit plan approve` and
