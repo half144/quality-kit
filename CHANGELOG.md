@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.3.6
+
+- **The plan follows a renamed branch.** Paseo creates a worktree on a
+  placeholder branch (`harsh-pony`) and renames it after the first message;
+  a plan written before the rename was lost, and `plan approve` said there
+  was none. Now the branch folder (plan, approval, evidence) moves to the
+  new name, with one line: `quality-kit: plan moved from harsh-pony to
+  redesign/payment-screen (branch renamed)`. The proof is git's reflog entry
+  for the rename, so a deleted branch never hands its plan to a new one,
+  and a former name that is a live branch again keeps its folder. Works for
+  any `git branch -m` and for folders saved by older versions.
+- **One project id per repository.** The id was named after the worktree
+  folder, so each worktree had its own: a local ruleset set up in one
+  worktree did not exist in the others, and branch state was split per
+  worktree. The id now comes from the repository (the main checkout keeps
+  the one it had). The first run in a worktree moves its old state over,
+  never overwriting; in team mode each worktree keeps its own signed
+  acceptance. The ruleset hash of existing projects does not change.
+
 ## v0.3.5
 
 - **The tiny plan reads as markdown, not a text wall.** `plan write` and
