@@ -27,6 +27,19 @@ export function writeManifest(branch, manifest) {
   writeFileSync(manifestPath(branch), `${JSON.stringify(manifest, null, 2)}\n`);
 }
 
+/** Items captured under `from` point under `to`: the branch folder moved (renamed branch, new project id). Pure. */
+export function rebaseItems(items, from, to) {
+  const moved = (path) => (path?.startsWith(`${from}/`) ? join(to, path.slice(from.length + 1)) : path);
+  return items.map((item) => ({ ...item, file: moved(item.file), framed: moved(item.framed) }));
+}
+
+/** The manifest of a branch folder that was moved from `from`, rewritten to its new place. */
+export function rebaseManifest(branch, from) {
+  const manifest = readManifest(branch);
+  if (manifest.items.length === 0) return;
+  writeManifest(branch, { ...manifest, items: rebaseItems(manifest.items, from, branch) });
+}
+
 function itemKey({ kind, screen, device, caption }) {
   return [kind, screen, device, caption ?? ''].join(' ');
 }
