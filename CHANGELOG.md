@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.3.5
+
+- **The tiny plan reads as markdown, not a text wall.** `plan write` and
+  `plan show` print the plan rendered (bold labels, Where as a bulleted list
+  with file names in inline code, a multi-line section as a list), and the
+  agent pastes that output as is, outside a code block. `ship` uses the same
+  renderer, so the PR shows the plan the owner approved.
+- **Limits on the plan.** At most 15 lines and 120 characters per line; Goal
+  one line; Context at most 2 sentences; Where 1 to 5 bullets; How it works at
+  most 4 lines; Proof at most 2. The error names the field and bullet to cut.
+  A label written with a note (`Onde (só apresentação):`), in bold or in the
+  other language is reported by line with the exact label to write; before,
+  the only message was "The sections must be exactly, in this order".
+- **Proof guidance.** Clean stills by default, marked only for a bug repro,
+  "before and after" only when the before matters, no outside skills named.
+- Plans saved by older versions still load, approve, render and ship. The
+  ruleset hash of existing projects does not change.
+
 ## v0.3.4
 
 - **The owner sees when the agent waits for the plan's ok.** When the turn
