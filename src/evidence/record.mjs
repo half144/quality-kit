@@ -2,7 +2,8 @@
  * Video evidence, only for an interaction: the agent writes a cutaway plan and
  * the kit records it with the PR settings. A plan `url` may be a screen path
  * (`/conta`, `web:/painel`): the kit then starts the app (or uses `--origin`)
- * and records a resolved copy of the plan.
+ * and records a resolved copy of the plan. Once the mp4 is exported the raw
+ * capture goes (`cleanup.mjs`): only the video and the plan stay.
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
@@ -10,6 +11,7 @@ import { dirname, isAbsolute, join, resolve } from 'node:path';
 
 import { ensureDir } from '../project.mjs';
 import { parseTarget, targetKey } from '../verify/apps.mjs';
+import { trimRecording } from './cleanup.mjs';
 import { cutaway, cutawayDoctor, recordArgs } from './cutaway.mjs';
 import { withServers } from './servers.mjs';
 
@@ -53,7 +55,9 @@ export async function recordVideo({ project, apps, dir, planFile, origin, tree }
     const resolved = resolvePlan(plan, { origin: target.app && servers[target.app].origin, path: target.path, planDir: dirname(resolve(planFile)) });
     const planPath = join(ensureDir(out), 'plan.json');
     writeFileSync(planPath, `${JSON.stringify(resolved, null, 2)}\n`);
-    const result = await cutaway(recordArgs({ plan: planPath, out: join(out, 'recording'), device }));
+    const recording = join(out, 'recording');
+    const result = await cutaway(recordArgs({ plan: planPath, out: recording, device }));
+    trimRecording(recording, result.output);
     process.stdout.write(`video ${target.screen} (${device}): ${result.output}\n`);
     return { kind: 'video', screen: target.screen, device, file: result.output, framed: null, caption: null, tree, capturedAt: new Date().toISOString() };
   });

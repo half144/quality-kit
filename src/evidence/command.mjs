@@ -15,6 +15,7 @@ import { baseRefs, branchChanges, mergeBase } from '../git/git.mjs';
 import { languageOf } from '../setup/language.mjs';
 import { normalizeApps, parseTarget } from '../verify/apps.mjs';
 import { changedTargets, treeHash } from '../verify/proof.mjs';
+import { sweepCaptures } from './cleanup.mjs';
 import { cutawayDoctor } from './cutaway.mjs';
 import { byFreshness, evidenceDir, readManifest, withItems, writeManifest } from './manifest.mjs';
 import { captionText } from './mark.mjs';
@@ -110,6 +111,7 @@ export async function evidenceCommand({ project, config }, argv) {
     process.stdout.write(`${USAGE}\n`);
     return 0;
   }
+  sweepCaptures();
   const apps = normalizeApps(config.verify);
   return action({ project, config, apps, branch: branchDir(project) }, argv.slice(1));
 }

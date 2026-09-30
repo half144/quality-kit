@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 
+import { finishedVideo, leftovers, sweepCaptures } from '../src/evidence/cleanup.mjs';
 import { stillOptions, parseFlags } from '../src/evidence/command.mjs';
 import { cutawayCli, doctorProblem, frameArgs, recordArgs } from '../src/evidence/cutaway.mjs';
 import { byFreshness, evidenceGap, readManifest, withItems, writeManifest } from '../src/evidence/manifest.mjs';
@@ -109,3 +110,35 @@ test('video plan: a screen path gets the app origin and absolute upload files', 
   assert.equal(resolvePlan({ url: 'http://x/y', steps: [] }, { origin: null, path: undefined, planDir: '/p' }).url, 'http://x/y');
 });
 
+
+test('cleanup: only the delivered video stays, and only finished takes are swept', () => {
+  assert.deepEqual(leftovers(['frames', 'timeline.json', 'camera.json', 'poster.png', 'render.json', 'workflow.json', 'video.mp4'], '/x/recording/video.mp4'), ['frames', 'timeline.json', 'camera.json', 'poster.png', 'render.json', 'workflow.json']);
+  assert.equal(finishedVideo(['frames', 'timeline.json', 'workflow.json', 'video.mp4']), 'video.mp4');
+  assert.equal(finishedVideo(['frames', 'timeline.json']), null, 'still recording');
+  assert.equal(finishedVideo(['frames', 'timeline.json', 'video.mp4']), null, 'still exporting');
+  assert.equal(finishedVideo(['workflow.json', 'video.mp4']), null, 'already trimmed');
+});
+
+test('cleanup: the sweep trims finished takes under the kit evidence folders, nothing else', () => {
+  const home = mkdtempSync(join(tmpdir(), 'qk-sweep-'));
+  const take = (branch, name, files) => {
+    const recording = join(home, 'projects', 'app-1', 'branches', branch, 'evidence', 'videos', name, 'recording');
+    mkdirSync(join(recording, 'frames'), { recursive: true });
+    writeFileSync(join(recording, 'frames', '000000.png'), 'png');
+    for (const file of files) writeFileSync(join(recording, file), '{}');
+    return recording;
+  };
+  try {
+    const done = take('main', 'root-desktop-1', ['timeline.json', 'workflow.json', 'video.mp4']);
+    const busy = take('feat', 'root-phone-2', ['timeline.json']);
+    const other = join(home, 'projects', 'app-1', 'branches', 'main', 'stills', 'frames');
+    mkdirSync(other, { recursive: true });
+    sweepCaptures(home);
+    assert.deepEqual(readdirSync(done), ['video.mp4']);
+    assert.deepEqual(readdirSync(busy).sort(), ['frames', 'timeline.json']);
+    assert.ok(existsSync(other));
+    sweepCaptures(join(home, 'nowhere'));
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
