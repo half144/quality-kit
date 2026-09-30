@@ -190,14 +190,18 @@ state of the files: edit again, prove again.
 
 ```
 quality-kit evidence still /guests
+quality-kit evidence still --plan /tmp/account.json
 quality-kit evidence record /tmp/confirm-two-guests.json
 ```
 
 `still` screenshots each screen on desktop and phone and frames it as a
 browser window or a drawn iPhone. Stills are clean by default; `--mark <css>`
 adds a red outline and an actual vs expected caption, for when the eye would
-miss the change (a bug repro, one element in a busy page). `record` turns a short plan of clicks into a
-video, for changes that are an interaction. Both are made with
+miss the change (a bug repro, one element in a busy page). A screen behind a
+login or a code takes `--plan`: a JSON with the `url` and the steps to run
+before the shot (type the code, click enter), in the same format as a video
+plan. `record` turns a short plan of clicks into a video, for changes that are
+an interaction; only the mp4 is kept, the raw frames are deleted after export. Both are made with
 [cutaway](https://github.com/half144/cutaway), pinned inside the kit, and are
 valid only for the current state of the files.
 
@@ -324,7 +328,7 @@ by `setup` and kept current by two skills:
 | `quality-kit gate` | run the checks on what changed (`--profile fast` for the quick set) |
 | `quality-kit verify --changed` | open the affected screens and record the proof |
 | `quality-kit plan write` / `approve` | save the branch's tiny plan; approve it after your ok |
-| `quality-kit evidence still` / `record` | screenshots (framed, optionally marked) and videos for the PR |
+| `quality-kit evidence still` / `record` | screenshots (framed, optionally marked, `--plan` for steps before the shot) and videos for the PR |
 | `quality-kit ship` | open (or update) the PR with plan, evidence and gate summary (`--dry-run` to preview) |
 | `quality-kit map` | check the screen map against the real routes |
 | `quality-kit rules status` | is the ruleset the accepted one? |

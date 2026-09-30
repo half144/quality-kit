@@ -21,6 +21,39 @@ screenshotted, then framed by cutaway (a browser window with the address, the
 drawn iPhone). The app starts with the ruleset's `verify.apps` command; if it
 is already running, pass `--origin http://127.0.0.1:3000`.
 
+### A screen behind a gate: `--plan`
+
+When the screen needs a login, a code, or a click to reach the state worth
+showing, write a still plan and capture it. It uses the **same steps as a
+video plan** (below), and they run before the shot on desktop and phone:
+
+```json
+{
+  "url": "/conta/demo",
+  "steps": [
+    { "action": "type", "selector": "input[name=code]", "text": "123456" },
+    { "action": "click", "selector": "button[type=submit]", "expect": "text=My account" }
+  ],
+  "mark": { "selector": "[data-testid=total]", "expected": "R$ 120,00" }
+}
+```
+
+```
+quality-kit evidence still --plan /tmp/shot.json
+```
+
+- `url` is a screen path (`/conta`, `admin:/users`); pass `--origin` if the
+  app is already running. `mark` is optional, as on the command line.
+- Write `click` / `scroll`: on the phone they run as `tap` / `swipe` (and the
+  other way round), so one plan serves both devices. Video-only fields
+  (`device`, `pause`, `hold`) are ignored.
+- A failing step stops with its number and the Playwright error: fix the
+  selector, don't retry blindly.
+- **Never record a video to get a still** of a gated screen. A video is for
+  an interaction; a still plan is seconds, a video minutes and hundreds of MB.
+- `--changed` opens each screen without steps: a gated screen it reaches
+  shows the gate. Capture those with `--plan` too.
+
 **Clean by default.** A new screen, a layout change or anything the reviewer
 sees at a glance goes without marks. Mark only when the eye would miss it: a
 bug repro (the wrong value on screen) or a one-element change lost in a busy
@@ -65,10 +98,15 @@ quality-kit evidence record /tmp/add-guest.json
 - It records at PR size (1280x720, phone 720x1280, standard quality) so it
   plays in GitHub and stays under the attachment limit. Keep it under ~30 s.
 - A step that saves data writes wherever the app points: use local or demo data.
+- Only the mp4 is kept: the raw capture (lossless frames, timeline, poster)
+  is deleted once the video is exported. cutaway's `render` cannot re-export
+  the take afterwards, by design: for another take, `record` again.
 
 ## Housekeeping
 
 - `quality-kit evidence status`: what the branch has, fresh or STALE.
-- `quality-kit evidence clear`: start over.
+- `quality-kit evidence clear`: start over (deletes the branch's stills and
+  videos). Any `evidence` command also drops the raw frames that older kit
+  versions left next to finished videos.
 - `quality-kit evidence doctor`: is the recorder ready (Chromium, canvas,
   FFmpeg)? A missing FFmpeg: run `quality-kit install` again or install one.
