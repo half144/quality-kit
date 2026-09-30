@@ -45,7 +45,7 @@ async function confirm(question) {
 }
 
 function sealed(project, state) {
-  writeRecord(project.id, state);
+  writeRecord(project.acceptanceId, state);
   if (project.mode === 'team') writeFileSync(join(project.rulesDir, 'integrity.json'), `${JSON.stringify({ reguaHash: state.reguaHash }, null, 2)}\n`);
   for (const profile of ['full', 'fast']) rmSync(join(project.stateDir, `gate-${profile}.stamp`), { force: true });
 }
@@ -55,7 +55,7 @@ export async function acceptRules() {
   const project = locateProject(process.cwd());
   const config = loadConfig(project.rulesDir);
   const state = currentState(project, config);
-  const record = readRecord(project.id);
+  const record = readRecord(project.acceptanceId);
   const changes = reguaDiff(record?.files, state.files);
   const growth = debtGrowth(record?.debt ?? {}, state.debt);
   process.stdout.write(`Ruleset for ${project.repo} (${project.mode}, ${project.rulesDir})\n`);

@@ -120,7 +120,7 @@ export async function finalizeProject(cwd) {
   writeJson(join(project.rulesDir, 'config.json'), { ...config, status: 'active' });
   const active = loadConfig(project.rulesDir);
   const state = currentState(project, active);
-  writeRecord(project.id, state);
+  writeRecord(project.acceptanceId, state);
   if (project.mode === 'team') writeJson(join(project.rulesDir, 'integrity.json'), { reguaHash: state.reguaHash });
   return { project, notes: [...notes, hooks.note].filter(Boolean), debt, debtTotals: debtSummary(state), hooks: hooks.installed, teamFiles };
 }

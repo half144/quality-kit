@@ -7,7 +7,7 @@ import { currentState, stateAt } from '../integrity/state.mjs';
 
 function judge(project, config, { base, ci }) {
   const current = currentState(project, config);
-  const record = ci ? null : readRecord(project.id);
+  const record = ci ? null : readRecord(project.acceptanceId);
   const recordValid = record ? isSigned(record, machineKey()) : false;
   const baseState = project.mode === 'team' ? stateAt(project, base) : null;
   const formerKey = renamedKey(parseRenames(git(project.repo, 'diff', '--name-status', '-M', base)));
@@ -27,5 +27,5 @@ export function integrityProblems(project, config, options) {
 export function refreshAcceptance(project, config, options) {
   if (options.ci) return;
   const { current, verdict } = judge(project, config, options);
-  if (verdict.problems.length === 0 && verdict.resign) writeRecord(project.id, current);
+  if (verdict.problems.length === 0 && verdict.resign) writeRecord(project.acceptanceId, current);
 }
