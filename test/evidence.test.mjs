@@ -5,11 +5,12 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 
 import { finishedVideo, leftovers, sweepCaptures } from '../src/evidence/cleanup.mjs';
-import { stillOptions, parseFlags } from '../src/evidence/command.mjs';
+import { stillOptions, stillPlanTarget, parseFlags } from '../src/evidence/command.mjs';
 import { cutawayCli, doctorProblem, frameArgs, recordArgs } from '../src/evidence/cutaway.mjs';
 import { byFreshness, evidenceGap, readManifest, withItems, writeManifest } from '../src/evidence/manifest.mjs';
 import { captionText } from '../src/evidence/mark.mjs';
 import { planTarget, resolvePlan } from '../src/evidence/record.mjs';
+import { stepsOn, validateStillPlan } from '../src/evidence/steps.mjs';
 import { stillName, stillProfiles } from '../src/evidence/stills.mjs';
 import { normalizeApps } from '../src/verify/apps.mjs';
 
@@ -110,6 +111,55 @@ test('video plan: a screen path gets the app origin and absolute upload files', 
   assert.equal(resolvePlan({ url: 'http://x/y', steps: [] }, { origin: null, path: undefined, planDir: '/p' }).url, 'http://x/y');
 });
 
+
+const GATE = [
+  { action: 'type', selector: 'input[name=code]', text: '123456' },
+  { action: 'click', selector: 'button[type=submit]', expect: 'text=My account' },
+];
+
+test('still plan: url and steps in the cutaway format, uploads made absolute', () => {
+  const plan = validateStillPlan({ url: '/conta/demo', device: 'iPhone 15 Pro', steps: [...GATE, { action: 'upload', selector: 'button', file: 'a.png' }] }, '/plans');
+  assert.equal(plan.url, '/conta/demo');
+  assert.equal(plan.timeout, 10000);
+  assert.equal(plan.mark, null);
+  assert.deepEqual(plan.steps.slice(0, 2), GATE);
+  assert.deepEqual(plan.steps[2].file, ['/plans/a.png']);
+  assert.deepEqual(validateStillPlan({ url: '/', steps: [], mark: { selector: 'h1', expected: 'x' }, timeout: 500 }, '/').mark, { selector: 'h1', actual: undefined, expected: 'x' });
+});
+
+test('still plan: a broken plan says what to fix', () => {
+  const broken = (plan) => () => validateStillPlan(plan, '/');
+  assert.throws(broken([]), /JSON object with url and steps/);
+  assert.throws(broken({ steps: [] }), /url is required/);
+  assert.throws(broken({ url: '/' }), /steps must be an array/);
+  assert.throws(broken({ url: '/', steps: [{ action: 'hover', selector: 'a' }] }), /step 1: unsupported action; use one of click, tap/);
+  assert.throws(broken({ url: '/', steps: [GATE[0], { action: 'click' }] }), /step 2: selector is required/);
+  assert.throws(broken({ url: '/', steps: [{ action: 'type', selector: 'input' }] }), /text must be a string/);
+  assert.throws(broken({ url: '/', steps: [{ action: 'press' }] }), /key must be a string/);
+  assert.throws(broken({ url: '/', steps: [{ action: 'swipe', y: 'down' }] }), /y must be a number/);
+  assert.throws(broken({ url: '/', steps: [{ action: 'wait', duration: 90 }] }), /duration must be 0 to 60/);
+  assert.throws(broken({ url: '/', steps: [{ action: 'click', selector: 'a', expect: '' }] }), /expect must be a non-empty selector/);
+  assert.throws(broken({ url: '/', steps: [{ action: 'upload', selector: 'a' }] }), /file must be a path/);
+  assert.throws(broken({ url: '/', steps: [], timeout: 0 }), /timeout must be an integer/);
+  assert.throws(broken({ url: '/', steps: [], mark: { actual: '0' } }), /mark needs a selector/);
+});
+
+test('still plan: desktop clicks and scrolls, the phone taps and swipes, whatever the author wrote', () => {
+  const steps = [{ action: 'click', selector: 'a' }, { action: 'tap', selector: 'b' }, { action: 'scroll', y: 300 }, { action: 'swipe', y: -100 }, { action: 'type', selector: 'c', text: 'x' }];
+  assert.deepEqual(stepsOn(steps, 'desktop').map((step) => step.action), ['click', 'click', 'scroll', 'scroll', 'type']);
+  assert.deepEqual(stepsOn(steps, 'phone').map((step) => step.action), ['tap', 'tap', 'swipe', 'swipe', 'type']);
+  assert.equal(stepsOn(steps, 'phone')[0].selector, 'a');
+});
+
+test('still plan: the screen it opens, its own mark, and --plan on the command line', () => {
+  const plan = validateStillPlan({ url: 'admin:/users', steps: GATE, mark: { selector: 'h1', actual: '0' } }, '/');
+  assert.deepEqual(stillPlanTarget(APPS, plan, 'en'), { app: 'admin', path: '/users', plan: { steps: GATE, timeout: 10000 }, mark: { selector: 'h1', caption: 'Actual: 0' } });
+  assert.equal(stillPlanTarget(APPS, validateStillPlan({ url: '/conta', steps: [] }, '/'), 'en').mark, undefined);
+  assert.throws(() => stillPlanTarget(APPS, validateStillPlan({ url: 'http://localhost:3000/conta', steps: [] }, '/'), 'en'), /full URL; give the screen path/);
+  assert.equal(stillOptions(APPS, ['--plan', '/tmp/shot.json'], 'en').planFile, '/tmp/shot.json');
+  assert.equal(stillOptions(APPS, ['/a'], 'en').planFile, null);
+  assert.throws(() => stillOptions(APPS, ['--plan'], 'en'), /Usage/);
+});
 
 test('cleanup: only the delivered video stays, and only finished takes are swept', () => {
   assert.deepEqual(leftovers(['frames', 'timeline.json', 'camera.json', 'poster.png', 'render.json', 'workflow.json', 'video.mp4'], '/x/recording/video.mp4'), ['frames', 'timeline.json', 'camera.json', 'poster.png', 'render.json', 'workflow.json']);

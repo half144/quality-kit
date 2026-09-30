@@ -2,7 +2,7 @@
  * `quality-kit evidence`: the PR-facing proof of the current branch (verify is
  * the runtime smoke proof the gate reads; evidence is what the reviewer sees).
  *
- *   quality-kit evidence still <path>... | --changed [--origin <url>]
+ *   quality-kit evidence still <path>... | --changed | --plan <still-plan.json> [--origin <url>]
  *                              [--mark <css> [--actual <text>] [--expected <text>]]
  *   quality-kit evidence record <cutaway-plan.json> [--origin <url>]
  *   quality-kit evidence status | clear | doctor
@@ -21,11 +21,12 @@ import { byFreshness, evidenceDir, readManifest, withItems, writeManifest } from
 import { captionText } from './mark.mjs';
 import { recordVideo } from './record.mjs';
 import { captureStills } from './stills.mjs';
+import { readStillPlan } from './steps.mjs';
 
-const VALUE_FLAGS = new Set(['--origin', '--mark', '--actual', '--expected']);
+const VALUE_FLAGS = new Set(['--origin', '--mark', '--actual', '--expected', '--plan']);
 
 export const USAGE = `Usage:
-  quality-kit evidence still <path>... | --changed [--origin <url>] [--mark <css> [--actual <text>] [--expected <text>]]
+  quality-kit evidence still <path>... | --changed | --plan <still-plan.json> [--origin <url>] [--mark <css> [--actual <text>] [--expected <text>]]
   quality-kit evidence record <cutaway-plan.json> [--origin <url>]
   quality-kit evidence status | clear | doctor`;
 
@@ -46,19 +47,32 @@ export function parseFlags(argv) {
 
 export function stillOptions(apps, argv, language) {
   const { values, positionals } = parseFlags(argv);
-  if (!values.changed && positionals.length === 0) throw new Error(USAGE);
+  if (!values.changed && !values.plan && positionals.length === 0) throw new Error(USAGE);
   if ((values.actual || values.expected) && !values.mark) throw new Error('--actual and --expected caption a --mark: say which element (a CSS selector).');
   const caption = captionText(language, values);
   return {
     targets: positionals.map((arg) => parseTarget(apps, arg)),
     changed: values.changed === true,
+    planFile: values.plan ?? null,
     origin: values.origin ?? null,
     mark: values.mark ? { selector: values.mark, caption: caption || null } : null,
   };
 }
 
+/** The screen a validated still plan opens, with its steps and its own mark. Pure. */
+export function stillPlanTarget(apps, plan, language) {
+  if (/^[a-z]+:\/\//i.test(plan.url)) throw new Error(`Still plan: url "${plan.url}" is a full URL; give the screen path (/conta) and pass --origin if the app is already running.`);
+  const mark = plan.mark && { selector: plan.mark.selector, caption: captionText(language, plan.mark) || null };
+  return { ...parseTarget(apps, plan.url), plan: { steps: plan.steps, timeout: plan.timeout }, ...(mark && { mark }) };
+}
+
 function unique(targets) {
   return [...new Map(targets.map((target) => [`${target.app} ${target.path}`, target])).values()];
+}
+
+/** The --mark flags go on every screen whose plan does not bring its own. */
+function withMark(targets, mark) {
+  return mark ? targets.map((target) => ({ mark, ...target })) : targets;
 }
 
 function record(branch, items) {
@@ -73,11 +87,13 @@ function describe(item, fresh) {
 
 const ACTIONS = {
   still: async ({ project, config, apps, branch }, argv) => {
-    const options = stillOptions(apps, argv, languageOf(config));
+    const language = languageOf(config);
+    const options = stillOptions(apps, argv, language);
+    const planned = options.planFile ? [stillPlanTarget(apps, readStillPlan(options.planFile), language)] : [];
     const changed = options.changed ? changedTargets(project, config, branchChanges(project.repo, mergeBase(project.repo, baseRefs(config.base))).changed) : [];
-    const targets = unique([...options.targets, ...changed]);
+    const targets = withMark(unique([...options.targets, ...changed, ...planned]), options.mark);
     if (targets.length === 0) throw new Error('No screen to capture: the change affects no screen in the map. Name the screen path.');
-    const items = await captureStills({ project, apps, dir: evidenceDir(branch), targets, origin: options.origin, mark: options.mark, tree: treeHash(project.repo) });
+    const items = await captureStills({ project, apps, dir: evidenceDir(branch), targets, origin: options.origin, tree: treeHash(project.repo) });
     return record(branch, items);
   },
   record: async ({ project, apps, branch }, argv) => {
