@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 
+import { renderPlan } from '../src/plan/render.mjs';
 import { prBody, prTitle } from '../src/ship/body.mjs';
 import { prArgs } from '../src/ship/github.mjs';
 import { baseBranch, mediaItems, shipBlockers } from '../src/ship/ship.mjs';
@@ -18,7 +19,7 @@ test('PR body: plan, evidence embedded, then the gate summary', () => {
     { kind: 'still', screen: '/conta', device: 'phone', caption: null, path: '/tmp/conta-phone.framed.png' },
   ];
   const body = prBody({ language: 'en', plan: PLAN, evidence, checks: ['architecture', 'lint', 'verify'] });
-  const order = ['## Plan', '**Goal:** the total shows', '**Where:**\n\n- total-card.tsx\n- use-total.ts', '## Evidence', '![/painel (Desktop)](https://github.com/user-attachments/assets/a)', '> Actual: 0 · Expected: 120', '**/painel (Phone)**\n\nhttps://github.com/user-attachments/assets/b', 'Local file (not uploaded): `/tmp/conta-phone.framed.png`', '## Gate', 'passed on this change: architecture, type-aware lint, screens opened on desktop and mobile.'];
+  const order = ['## Plan', '**Goal:** the total shows', '**Where**\n- `total-card.tsx`\n- `use-total.ts`', '## Evidence', '![/painel (Desktop)](https://github.com/user-attachments/assets/a)', '> Actual: 0 · Expected: 120', '**/painel (Phone)**\n\nhttps://github.com/user-attachments/assets/b', 'Local file (not uploaded): `/tmp/conta-phone.framed.png`', '## Gate', 'passed on this change: architecture, type-aware lint, screens opened on desktop and mobile.'];
   const positions = order.map((part) => body.indexOf(part));
   assert.ok(positions.every((position) => position >= 0), body);
   assert.deepEqual([...positions].sort((a, b) => a - b), positions);
@@ -27,6 +28,11 @@ test('PR body: plan, evidence embedded, then the gate summary', () => {
 test('PR body: the project language, and no screens means no media', () => {
   const body = prBody({ language: 'pt-BR', plan: 'Objetivo: a\nContexto: b\nOnde: c\nComo funciona: d\nProva: e', evidence: [], checks: ['tests'] });
   assert.match(body, /^## Plano\n\n\*\*Objetivo:\*\* a[\s\S]*## Evidências\n\nNenhuma tela mudou[\s\S]*## Gate\n\nO quality-kit passou nesta mudança: testes relacionados\.$/);
+});
+
+test('PR body: the plan section is the same rendering the owner saw in chat', () => {
+  const body = prBody({ language: 'en', plan: PLAN, evidence: [], checks: [] });
+  assert.ok(body.startsWith(`## Plan\n\n${renderPlan(PLAN)}\n\n## Evidence`), body);
 });
 
 test('PR title: the goal line', () => {

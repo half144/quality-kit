@@ -5,6 +5,7 @@
  */
 
 import { parsePlan } from '../plan/plan.mjs';
+import { renderPlan } from '../plan/render.mjs';
 
 const TEXT = {
   en: {
@@ -53,15 +54,6 @@ function textOf(language) {
   return TEXT[language] ?? TEXT.en;
 }
 
-function planEntry({ label, text }) {
-  if (/^- /m.test(text)) return `**${label}:**\n\n${text}`;
-  return `**${label}:** ${text.split('\n').join('  \n')}`;
-}
-
-export function planSection(plan) {
-  return parsePlan(plan).sections.map(planEntry).join('\n\n');
-}
-
 function media(item, words) {
   const label = `${item.screen} (${words.devices[item.device]})`;
   const caption = item.caption ? `\n> ${item.caption}` : '';
@@ -80,7 +72,7 @@ export function prBody({ language, plan, evidence, checks }) {
   const words = textOf(language);
   return [
     `## ${words.plan}`,
-    planSection(plan),
+    renderPlan(plan),
     `## ${words.evidence}`,
     evidenceSection(evidence, words),
     `## ${words.gate}`,
